@@ -8,7 +8,7 @@ import os
 def main():
     """Fonction principale."""
     print("=" * 60)
-    print("🚀 OPSGAIN PLATFORM / PORT SEC INTELLIGENT")
+    print("🚀 OPSGAIN PLATFORM/PORT SEC INTELLIGENT")
     print("=" * 60)
     
     # Vérification de l'environnement
@@ -60,7 +60,7 @@ def main():
     print("🎯 LANCEMENT DE L'APPLICATION")
     print("=" * 60)
     print("\n📊 Application disponible sur: http://localhost:8501")
-    print("🔑 Mot de passe par défaut: FROMelie-16")
+    print("🔑 Mot de passe par défaut: FROMelie-1756")
     print("🔄 Pour arrêter: Ctrl+C")
     print("\n" + "=" * 60)
     

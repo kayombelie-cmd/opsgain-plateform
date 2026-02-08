@@ -77,7 +77,7 @@ class Authentication:
         st.markdown("<h1 style='text-align: center; color: #3B82F6; font-size: 3.5rem;'>🔐</h1>", unsafe_allow_html=True)
         
         # Titre principal
-        st.markdown(f"<h2 class='title-blue'>{APP_NAME}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 class='title-blue'>OPSGAIN PLATEFORM</h2>", unsafe_allow_html=True)
         
         # Slogan
         st.markdown("<p class='slogan-green'>💎 Vos Opérations • Nos Gains</p>", unsafe_allow_html=True)

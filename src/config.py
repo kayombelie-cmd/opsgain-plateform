@@ -2,6 +2,7 @@
 Configuration centrale de l'application OpsGain.
 Toutes les constantes et paramètres globaux sont définis ici.
 """
+import streamlit as st
 import os
 from pathlib import Path
 from datetime import datetime
@@ -20,7 +21,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 # Configuration des données
 PUBLIC_DATA_HASH = "portsec_2026_v1"
 DATA_SEED = 42
-DEFAULT_PASSWORD = "FROMelie-16"
+DEFAULT_PASSWORD = st.secrets.get("password", "FROMelie-1756")
 
 # Périodes par défaut
 PERIODS = {
@@ -69,7 +70,7 @@ COLORS = {
 
 # Version
 APP_VERSION = "3.0.0"
-APP_NAME = "OpsGain Platform / Port Sec Intelligent"
+APP_NAME = "OpsGain Platform"
 APP_DESCRIPTION = "La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel"
 
 # URLs
