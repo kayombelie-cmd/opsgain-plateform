@@ -29,71 +29,148 @@ class Authentication:
         """Affiche la page de login."""
         st.set_page_config(page_title="OpsGain - Authentification", layout="centered")
         
-        # CSS personnalisé
+        # CSS COMPLET AVEC RÉINITIALISATION
         st.markdown("""
-                <style>
-            .title-blue {
-                color: #1E3A8A;
-                text-align: center;
-                font-size: 2.2rem;
-                font-weight: 700;
-                margin-bottom: 5px;
+        <style>
+            /* RÉINITIALISATION DES STYLES STREAMLIT */
+            div[data-testid="stVerticalBlock"] {
+                align-items: center !important;
             }
-            .slogan-green {
-                color: #10B981;
-                text-align: center;
-                font-size: 1.1rem;
-                font-weight: 600;
-                margin-bottom: 5px;
+            
+            div[data-testid="stVerticalBlockBorderWrapper"] {
+                max-width: 450px !important;
+                margin: 0 auto !important;
             }
-            .description {
-                color: #475569;
-                text-align: center;
-                font-size: 0.9rem;
-                line-height: 1.4;
-                margin: 0 auto 25px auto;
-                width: 90%;
-                max-width: 500px;
-                padding: 0;
+            
+            /* CONTENEUR PRINCIPAL */
+            .login-main {
+                width: 100% !important;
+                max-width: 450px !important;
+                margin: 0 auto !important;
+                padding: 30px 20px !important;
+                text-align: center !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
             }
-            .security-badge {
-                color: #6B7280;
-                text-align: center;
-                font-size: 0.75rem;
-                margin-top: 10px;
+            
+            /* ÉMOJI */
+            .login-emoji {
+                font-size: 3.5rem !important;
+                margin-bottom: 10px !important;
+                text-align: center !important;
             }
-            .login-container {
-                width: 100%;
-                max-width: 450px;
-                margin: 0 auto;
-                padding: 20px;
+            
+            /* TITRES */
+            .login-title {
+                color: #1E3A8A !important;
+                font-size: 2.2rem !important;
+                font-weight: 800 !important;
+                margin: 0 0 5px 0 !important;
+                text-align: center !important;
+                width: 100% !important;
+            }
+            
+            .login-slogan {
+                color: #10B981 !important;
+                font-size: 1.1rem !important;
+                font-weight: 600 !important;
+                margin: 0 0 10px 0 !important;
+                text-align: center !important;
+                width: 100% !important;
+            }
+            
+            /* DESCRIPTION */
+            .login-description {
+                color: #475569 !important;
+                font-size: 0.95rem !important;
+                line-height: 1.5 !important;
+                margin: 0 auto 25px auto !important;
+                text-align: center !important;
+                width: 100% !important;
+                max-width: 380px !important;
+                padding: 0 10px !important;
+            }
+            
+            /* CAPTION */
+            .login-caption {
+                color: #6B7280 !important;
+                font-size: 0.8rem !important;
+                margin: 0 auto 20px auto !important;
+                text-align: center !important;
+                width: 100% !important;
+            }
+            
+            /* DIVISEUR */
+            .login-divider {
+                width: 100% !important;
+                margin: 20px 0 !important;
+                border-color: #E5E7EB !important;
+            }
+            
+            /* CHAMP MOT DE PASSE */
+            div[data-testid="stTextInput"] {
+                width: 100% !important;
+                max-width: 350px !important;
+                margin: 0 auto 20px auto !important;
+            }
+            
+            /* BOUTON */
+            div[data-testid="stButton"] {
+                width: 100% !important;
+                max-width: 350px !important;
+                margin: 0 auto !important;
+            }
+            
+            button[kind="primary"] {
+                width: 100% !important;
+            }
+            
+            /* FOOTER */
+            .login-footer {
+                color: #6B7280 !important;
+                font-size: 0.85rem !important;
+                margin: 20px 0 0 0 !important;
+                text-align: center !important;
+                width: 100% !important;
+            }
+            
+            /* BADGE SÉCURITÉ */
+            .login-security {
+                color: #9CA3AF !important;
+                font-size: 0.75rem !important;
+                margin: 15px 0 0 0 !important;
+                text-align: center !important;
+                width: 100% !important;
             }
         </style>
         """, unsafe_allow_html=True)
         
-        # Conteneur principal
-        st.markdown('<div class="login-container">', unsafe_allow_html=True)
+        # CONTENEUR PRINCIPAL
+        st.markdown('<div class="login-main">', unsafe_allow_html=True)
         
         # Logo/emoji
-        st.markdown("<h1 style='text-align: center; color: #3B82F6; font-size: 3.5rem;'>🔐</h1>", unsafe_allow_html=True)
+        st.markdown('<div class="login-emoji">🔐</div>', unsafe_allow_html=True)
         
         # Titre principal
-        st.markdown(f"<h2 class='title-blue'>OPSGAIN PLATEFORM</h2>", unsafe_allow_html=True)
+        st.markdown('<h1 class="login-title">OPSGAIN PLATFORM</h1>', unsafe_allow_html=True)
         
         # Slogan
-        st.markdown("<p class='slogan-green'>💎 Vos Opérations • Nos Gains</p>", unsafe_allow_html=True)
+        st.markdown('<p class="login-slogan">💎 Vos Opérations • Nos Gains</p>', unsafe_allow_html=True)
         
         # Description
-        st.markdown("""
-                  <p class='description'>
-                  <strong>La plateforme qui transforme vos données opérationnelles<br>
-                           en gains financiers vérifiables en temps réel.</strong>
-                  </p>
-        """, unsafe_allow_html=True)
+        st.markdown('''
+        <p class="login-description">
+        <strong>La plateforme qui transforme vos données opérationnelles<br>
+        en gains financiers vérifiables en temps réel.</strong>
+        </p>
+        ''', unsafe_allow_html=True)
         
         # Version info
-        st.caption(f"📊 Dashboard opérationnel synchronisé • 🚀 {APP_VERSION} • 📅 Données 2026")
-        st.divider()
+        st.markdown('<p class="login-caption">📊 Dashboard opérationnel synchronisé • 🚀 3.0.0 • 📅 Données 2026</p>', unsafe_allow_html=True)
+        
+        # Divider
+        st.markdown('<hr class="login-divider">', unsafe_allow_html=True)
         
         # Champ mot de passe
         password = st.text_input(
@@ -110,14 +187,14 @@ class Authentication:
                 st.rerun()
             else:
                 st.error("❌ Mot de passe incorrect")
-                logger.warning(f"Tentative d'accès échouée")
         
-        st.divider()
+        # Divider
+        st.markdown('<hr class="login-divider">', unsafe_allow_html=True)
         
         # Footer
-        st.markdown("<p style='text-align: center; color: #6B7280; font-size: 0.85rem;'>© 2026 OpsGain Technologies • Tous droits réservés</p>", unsafe_allow_html=True)
+        st.markdown('<p class="login-footer">© 2026 OpsGain Technologies • Tous droits réservés</p>', unsafe_allow_html=True)
         
         # Badge sécurité
-        st.markdown('<p class="security-badge">🔐 Accès sécurisé • 🔄 Données synchronisées • 📈 ROI vérifiable</p>', unsafe_allow_html=True)
+        st.markdown('<p class="login-security">🔐 Accès sécurisé • 🔄 Données synchronisées • 📈 ROI vérifiable</p>', unsafe_allow_html=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
