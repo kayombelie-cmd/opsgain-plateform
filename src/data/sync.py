@@ -38,15 +38,20 @@ class DataSynchronizer:
     def _load_from_url(self) -> Optional[PeriodData]:
         """Charge les données depuis les paramètres d'URL."""
         try:
-            # Récupération des paramètres d'URL
-            query_params = st.experimental_get_query_params()
+            # Récupération des paramètres d'URL - NOUVELLE API STREAMLIT
+            query_params = st.query_params
+            
+            # Si aucun paramètre, retourner None
+            if not query_params:
+                return None
             
             # Convertir en dict simple
             params = {}
-            for key, value in query_params.items():
+            for key in query_params:
+                value = query_params[key]
                 if isinstance(value, list) and len(value) > 0:
                     params[key] = value[0]
-                else:
+                elif value:
                     params[key] = value
             
             # Vérifier si c'est un lien synchronisé
@@ -72,7 +77,7 @@ class DataSynchronizer:
             st.session_state.selected_period = period_data.get('name', 
                 f"{start_date.strftime('%d/%m/%Y')} au {end_date.strftime('%d/%m/%Y')}")
             
-            # Générer les données
+            # Générer les données synchronisées
             return self.generator.create_period_data(
                 start_date, end_date, use_current_time=False
             )
@@ -80,44 +85,3 @@ class DataSynchronizer:
         except Exception as e:
             st.error(f"Erreur lors du chargement des paramètres URL: {e}")
             return None
-    
-    def _load_from_sidebar(self) -> PeriodData:
-        """Charge les données basées sur la configuration de la sidebar."""
-        default_end = datetime.now()
-        
-        # Récupérer la période sélectionnée
-        selected_period = st.session_state.get('selected_period', '30 derniers jours')
-        start_date = st.session_state.get('start_date', default_end - timedelta(days=30))
-        end_date = st.session_state.get('end_date', default_end)
-        
-        # Générer les données
-        return self.generator.create_period_data(
-            start_date, end_date, use_current_time=True
-        )
-    
-    def generate_shareable_link(
-        self, 
-        period_name: str, 
-        start_date: datetime, 
-        end_date: datetime,
-        base_url: str = DEFAULT_BASE_URL
-    ) -> Tuple[str, str]:
-        """Génère un lien de partage synchronisé."""
-        link_id = str(uuid.uuid4())[:8]
-        
-        period_data = {
-            'name': period_name,
-            'start': start_date.strftime('%Y-%m-%d'),
-            'end': end_date.strftime('%Y-%m-%d')
-        }
-        
-        params = {
-            'sync': 'true',
-            'period': json.dumps(period_data),
-            'data_hash': PUBLIC_DATA_HASH,
-            'ref': link_id,
-            'timestamp': datetime.now().strftime('%Y%m%d_%H%M%S')
-        }
-        
-        params_str = urllib.parse.urlencode(params)
-        return f"{base_url}/?{params_str}", link_id
