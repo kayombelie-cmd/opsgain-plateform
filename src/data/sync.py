@@ -65,7 +65,6 @@ class DataSynchronizer:
             period_data = json.loads(params['period'])
             start_date = datetime.strptime(period_data['start'], '%Y-%m-%d')
             end_date = datetime.strptime(period_data['end'], '%Y-%m-%d')
-            data_hash = params.get('data_hash', PUBLIC_DATA_HASH)
             link_id = params.get('ref', 'unknown')
             
             # Log de l'accès
@@ -83,5 +82,74 @@ class DataSynchronizer:
             )
             
         except Exception as e:
-            st.error(f"Erreur lors du chargement des paramètres URL: {e}")
+            # Ne pas afficher l'erreur en production pour éviter les fuites de données
+            # st.error(f"Erreur lors du chargement des paramètres URL: {e}")
             return None
+    
+    def _load_from_sidebar(self) -> PeriodData:
+        """Charge les données basées sur la configuration de la sidebar."""
+        # Valeurs par défaut robustes
+        default_end = datetime.now()
+        default_start = default_end - timedelta(days=30)
+        
+        # Récupérer les valeurs avec vérification de type
+        start_date = default_start
+        end_date = default_end
+        
+        # Vérifier si start_date existe et est du bon type
+        if 'start_date' in st.session_state:
+            session_start = st.session_state.start_date
+            if isinstance(session_start, datetime):
+                start_date = session_start
+            elif isinstance(session_start, str):
+                try:
+                    start_date = datetime.strptime(session_start, '%Y-%m-%d')
+                except:
+                    start_date = default_start
+        
+        # Vérifier si end_date existe et est du bon type
+        if 'end_date' in st.session_state:
+            session_end = st.session_state.end_date
+            if isinstance(session_end, datetime):
+                end_date = session_end
+            elif isinstance(session_end, str):
+                try:
+                    end_date = datetime.strptime(session_end, '%Y-%m-%d')
+                except:
+                    end_date = default_end
+        
+        # S'assurer que start_date <= end_date
+        if start_date > end_date:
+            start_date = end_date - timedelta(days=30)
+        
+        # Générer les données
+        return self.generator.create_period_data(
+            start_date, end_date, use_current_time=True
+        )
+    
+    def generate_shareable_link(
+        self, 
+        period_name: str, 
+        start_date: datetime, 
+        end_date: datetime,
+        base_url: str = DEFAULT_BASE_URL
+    ) -> Tuple[str, str]:
+        """Génère un lien de partage synchronisé."""
+        link_id = str(uuid.uuid4())[:8]
+        
+        period_data = {
+            'name': period_name,
+            'start': start_date.strftime('%Y-%m-%d'),
+            'end': end_date.strftime('%Y-%m-%d')
+        }
+        
+        params = {
+            'sync': 'true',
+            'period': json.dumps(period_data),
+            'data_hash': PUBLIC_DATA_HASH,
+            'ref': link_id,
+            'timestamp': datetime.now().strftime('%Y%m%d_%H%M%S')
+        }
+        
+        params_str = urllib.parse.urlencode(params)
+        return f"{base_url}/?{params_str}", link_id
