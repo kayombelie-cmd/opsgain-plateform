@@ -21,7 +21,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 # Configuration des données
 PUBLIC_DATA_HASH = "portsec_2026_v1"
 DATA_SEED = 42
-DEFAULT_PASSWORD = st.secrets.get("password", "FROMelie-1756")
+DEFAULT_PASSWORD = "FROMelie-1756"
 
 # Périodes par défaut
 PERIODS = {
@@ -74,4 +74,4 @@ APP_NAME = "OPSGAIN PLATEFORM/PORT INTELLIGENT"
 APP_DESCRIPTION = "La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel"
 
 # URLs
-DEFAULT_BASE_URL = "https://OpsGain-plateform-cddzmcprdkp6fhqchgfqn9.streamlit.app"
+DEFAULT_BASE_URL =  "https://opsgain-plateform.streamlit.app"
