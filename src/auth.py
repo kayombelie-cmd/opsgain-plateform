@@ -31,7 +31,7 @@ class Authentication:
         
         # CSS personnalisé
         st.markdown("""
-        <style>
+                <style>
             .title-blue {
                 color: #1E3A8A;
                 text-align: center;
@@ -51,10 +51,10 @@ class Authentication:
                 text-align: center;
                 font-size: 0.9rem;
                 line-height: 1.4;
-                margin-bottom: 25px;
-                max-width: 400px;
-                margin-left: auto;
-                margin-right: auto;
+                margin: 0 auto 25px auto;
+                width: 90%;
+                max-width: 500px;
+                padding: 0;
             }
             .security-badge {
                 color: #6B7280;
@@ -63,7 +63,8 @@ class Authentication:
                 margin-top: 10px;
             }
             .login-container {
-                max-width: 400px;
+                width: 100%;
+                max-width: 450px;
                 margin: 0 auto;
                 padding: 20px;
             }
