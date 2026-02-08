@@ -84,10 +84,10 @@ class Authentication:
         
         # Description
         st.markdown("""
-        <p class='description'>
-        <strong>La plateforme qui transforme vos données opérationnelles<br>
-        en gains financiers vérifiables en temps réel.</strong>
-        </p>
+                  <p class='description'>
+                  <strong>La plateforme qui transforme vos données opérationnelles<br>
+                           en gains financiers vérifiables en temps réel.</strong>
+                  </p>
         """, unsafe_allow_html=True)
         
         # Version info
