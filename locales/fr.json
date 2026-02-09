@@ -1,0 +1,39 @@
+{
+  "app": {
+    "title": "OPSGAIN PLATFORM / PORT SEC INTELLIGENT",
+    "subtitle": "Dashboard opérationnel synchronisé",
+    "description": "La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel.",
+    "footer": "OPSGAIN PLATFORM v3.0 - Données synchronisées"
+  },
+  "auth": {
+    "title": "OPSGAIN PLATFORM",
+    "slogan": "💎 Vos Opérations • Nos Gains",
+    "description": "La plateforme qui transforme vos données opérationnelles<br>en gains financiers vérifiables en temps réel.",
+    "password_label": "Mot de passe d'accès :",
+    "button_access": "🚀 ACCÉDER AU DASHBOARD",
+    "wrong_password": "❌ Mot de passe incorrect"
+  },
+  "sidebar": {
+    "title": "OPSGAIN PLATFORM / PORT SEC INTELLIGENT",
+    "period_analysis": "📅 PÉRIODE D'ANALYSE",
+    "filters": "🔧 FILTRES",
+    "financial_params": "💰 PARAMÈTRES FINANCIERS",
+    "data_sync": "🔗 PARTAGE DE DONNÉES SYNCHRONISÉES",
+    "info": "📊 INFORMATIONS"
+  },
+  "dashboard": {
+    "operational_summary": "📊 SYNTHÈSE OPÉRATIONNELLE",
+    "performance_analysis": "📈 ANALYSE DES PERFORMANCES",
+    "equipment_performance": "🏗️ PERFORMANCE DES ÉQUIPEMENTS",
+    "realtime_map": "🗺️ CARTE TEMPS-RÉEL DU PORT",
+    "alerts": "🚨 ALERTES ET ACTIVITÉ EN TEMPS RÉEL",
+    "recommendations": "💡 RECOMMANDATIONS INTELLIGENTES",
+    "financial_module": "💰 MODULE FINANCIER"
+  },
+  "metrics": {
+    "total_operations": "📦 Opérations Total",
+    "avg_duration": "⏱️ Durée Moyenne",
+    "error_rate": "❌ Taux d'Erreur",
+    "total_gains": "💰 Gains Totaux Période"
+  }
+}

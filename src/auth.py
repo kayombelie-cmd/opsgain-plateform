@@ -153,18 +153,17 @@ class Authentication:
         st.markdown('<div class="login-emoji">🔐</div>', unsafe_allow_html=True)
         
         # Titre principal
-        st.markdown('<h1 class="login-title">OPSGAIN PLATFORM</h1>', unsafe_allow_html=True)
+        st.markdown(f"<h2 class='title-blue'>{i18n.get('auth.title')}</h2>", unsafe_allow_html=True)
         
         # Slogan
-        st.markdown('<p class="login-slogan">💎 Vos Opérations • Nos Gains</p>', unsafe_allow_html=True)
+        st.markdown(f"<p class='slogan-green'>{i18n.get('auth.slogan')}</p>", unsafe_allow_html=True)
         
         # Description
-        st.markdown('''
-        <p class="login-description">
-        <strong>La plateforme qui transforme vos données opérationnelles<br>
-        en gains financiers vérifiables en temps réel.</strong>
-        </p>
-        ''', unsafe_allow_html=True)
+        st.markdown(f"""
+<p class='description'>
+<strong>{i18n.get('auth.description')}</strong>
+</p>
+""", unsafe_allow_html=True)
         
         # Version info
         st.markdown('<p class="login-caption">📊 Dashboard opérationnel synchronisé • 🚀 3.0.0 • 📅 Données 2026</p>', unsafe_allow_html=True)

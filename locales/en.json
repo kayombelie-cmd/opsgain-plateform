@@ -1,0 +1,39 @@
+{
+  "app": {
+    "title": "OPSGAIN PLATFORM / INTELLIGENT DRY PORT",
+    "subtitle": "Synchronized operational dashboard",
+    "description": "The platform that transforms your operational data into verifiable financial gains in real time.",
+    "footer": "OPSGAIN PLATFORM v3.0 - Synchronized data"
+  },
+  "auth": {
+    "title": "OPSGAIN PLATFORM",
+    "slogan": "💎 Your Operations • Our Gains",
+    "description": "The platform that transforms your operational data<br>into verifiable financial gains in real time.",
+    "password_label": "Access password:",
+    "button_access": "🚀 ACCESS DASHBOARD",
+    "wrong_password": "❌ Incorrect password"
+  },
+  "sidebar": {
+    "title": "OPSGAIN PLATFORM / INTELLIGENT DRY PORT",
+    "period_analysis": "📅 ANALYSIS PERIOD",
+    "filters": "🔧 FILTERS",
+    "financial_params": "💰 FINANCIAL PARAMETERS",
+    "data_sync": "🔗 SYNCHRONIZED DATA SHARING",
+    "info": "📊 INFORMATION"
+  },
+  "dashboard": {
+    "operational_summary": "📊 OPERATIONAL SUMMARY",
+    "performance_analysis": "📈 PERFORMANCE ANALYSIS",
+    "equipment_performance": "🏗️ EQUIPMENT PERFORMANCE",
+    "realtime_map": "🗺️ REAL-TIME PORT MAP",
+    "alerts": "🚨 ALERTS AND REAL-TIME ACTIVITY",
+    "recommendations": "💡 INTELLIGENT RECOMMENDATIONS",
+    "financial_module": "💰 FINANCIAL MODULE"
+  },
+  "metrics": {
+    "total_operations": "📦 Total Operations",
+    "avg_duration": "⏱️ Average Duration",
+    "error_rate": "❌ Error Rate",
+    "total_gains": "💰 Total Period Gains"
+  }
+}

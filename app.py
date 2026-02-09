@@ -5,7 +5,7 @@ import streamlit as st
 import time
 from datetime import datetime, timedelta
 from streamlit_folium import folium_static
-
+from src.utils.i18n import i18n
 # Import des modules refactorés
 from src.auth import Authentication
 from src.config import APP_NAME, APP_VERSION, PUBLIC_DATA_HASH, PERIODS, COLORS
@@ -21,6 +21,11 @@ logger = setup_logger(__name__)
 
 def main():
     """Fonction principale de l'application."""
+    # Initialisation de la langue
+    if 'language' not in st.session_state:
+        st.session_state.language = 'fr'
+    
+    i18n.set_language(st.session_state.language)
     # Vérification de l'authentification
     Authentication.check_auth()
     
@@ -94,7 +99,7 @@ def render_sidebar(data_sync):
         
         # Filtres
         render_filters()
-        
+    
         # Paramètres financiers
         render_financial_params()
         
@@ -139,7 +144,22 @@ def render_filters():
         st.info(f"Prochain rafraîchissement dans {refresh_rate}s")
         st.session_state.auto_refresh = True
         st.session_state.refresh_rate = refresh_rate
-
+        st.markdown("---")
+        st.markdown("### 🌍 LANGUE")
+    
+    # Sélecteur de langue
+language = st.selectbox(
+        "Sélectionner la langue",
+        options=["fr", "en"],
+        format_func=lambda x: "🇫🇷 Français" if x == "fr" else "🇬🇧 English",
+        key="language_select"
+    )
+    
+    # Si la langue change, mettre à jour
+if language != st.session_state.language:
+        st.session_state.language = language
+        i18n.set_language(language)
+        st.rerun()
 
 def render_financial_params():
     """Affiche les paramètres financiers."""
@@ -318,7 +338,7 @@ def render_header(period_name):
             st.image(buf, width=80)
     
     with col2:
-        st.markdown(f'<h1 class="main-title">{APP_NAME}</h1>', unsafe_allow_html=True)
+        st.markdown(f'<h1 class="main-title">{i18n.get("app.title")}</h1>', unsafe_allow_html=True)
         st.markdown(f"**Dashboard opérationnel synchronisé | Période: {period_name} | Données Simulées 2026**")
         st.markdown("**Vos Operations Nos Gains. | La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel.**")
     
@@ -345,7 +365,7 @@ def render_header(period_name):
 
 def render_operational_summary(period_data, financial_metrics):
     """Affiche la synthèse opérationnelle."""
-    st.markdown('<h2 class="section-title">📊 SYNTHÈSE OPÉRATIONNELLE</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.operational_summary")}</h2>', unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     
