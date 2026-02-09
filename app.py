@@ -832,11 +832,11 @@ def render_financial_module(financial_metrics, period_data):
         st.markdown(f"""
         **Paramètres :**
         - Alertes maintenance détectées : {maintenance_alerts} alertes
-        - Coût évité par alerte : ${maintenance_cost}
+        - Coût évité par alerte : ${maintenance_cost}$
         - Gain total maintenance période : ${maintenance_gain_period:,.2f}$
         
         **Calcul :**
-        - Gain total maintenance :${maintenance_alerts} alertes × ${maintenance_cost}/alerte = ${maintenance_gain_period:,.2f}$
+        - Gain total maintenance :${maintenance_alerts} alertes × ${maintenance_cost}$/alerte = ${maintenance_gain_period:,.2f}$
         - Gain journalier moyen : ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}$/jour
         """)
         
