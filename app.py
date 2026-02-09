@@ -99,7 +99,27 @@ def render_sidebar(data_sync):
         
         # Filtres
         render_filters()
-    
+        # === AJOUTEZ ICI LE SÉLECTEUR DE LANGUE ===
+        st.markdown("---")
+        st.markdown("### 🌍 **LANGUE**")
+        
+        # Initialisation de la langue si non présente
+        if 'language' not in st.session_state:
+            st.session_state.language = 'fr'
+        
+        language = st.selectbox(
+            "Sélectionner la langue",
+            options=["fr", "en"],
+            format_func=lambda x: "🇫🇷 Français" if x == "fr" else "🇬🇧 English",
+            key="language_select"
+        )
+        
+        # Si la langue change, mettre à jour
+        if language != st.session_state.language:
+            st.session_state.language = language
+            i18n.set_language(language)
+            st.rerun()
+        
         # Paramètres financiers
         render_financial_params()
         
@@ -146,20 +166,6 @@ def render_filters():
         st.session_state.refresh_rate = refresh_rate
         st.markdown("---")
         st.markdown("### 🌍 LANGUE")
-    
-    # Sélecteur de langue
-language = st.selectbox(
-        "Sélectionner la langue",
-        options=["fr", "en"],
-        format_func=lambda x: "🇫🇷 Français" if x == "fr" else "🇬🇧 English",
-        key="language_select"
-    )
-    
-    # Si la langue change, mettre à jour
-if language != st.session_state.language:
-        st.session_state.language = language
-        i18n.set_language(language)
-        st.rerun()
 
 def render_financial_params():
     """Affiche les paramètres financiers."""
