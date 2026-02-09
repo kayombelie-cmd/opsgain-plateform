@@ -90,11 +90,31 @@ class FinancialCalculator:
         monthly_projection = total_daily_gains * working_days
         monthly_commission = monthly_fixed + (monthly_projection * commission_rate)
         
-        # 5. Hash de vérification
+                # 5. Hash de vérification
         hash_string = f"{period_data.period_name}:{total_ops}:{total_period_gains}:{daily_commission}:{PUBLIC_DATA_HASH}"
         transaction_hash = hashlib.sha256(hash_string.encode()).hexdigest()[:16]
         
-        # 6. Résumé de période
+        # 6. Création des métriques détaillées pour l'affichage
+        metrics = {
+            'total_ops_today': round(avg_daily_ops, 2),
+            'avg_duration_today': round(avg_duration, 2),
+            'error_rate_today': round(error_rate * 100, 2),
+            'time_saved_minutes': round(time_saved, 2),
+            'errors_avoided': round(errors_avoided, 2),
+            'maintenance_alerts': maintenance_alerts,
+            'trucks_per_day': round(trucks_per_day, 2),
+            'baseline_duration': baseline_duration,
+            'hourly_cost': hourly_cost,
+            'baseline_error_rate': round(baseline_error * 100, 2),
+            'error_cost': error_cost,
+            'monthly_fixed': monthly_fixed,
+            'commission_rate': round(commission_rate * 100, 2),
+            'working_days': working_days,
+            'fuel_saving_per_truck': self._get_param('fuel_saving_per_truck'),
+            'maintenance_alert_cost': self._get_param('maintenance_alert_cost')
+        }
+        
+        # 7. Résumé de période et breakdown
         period_summary = {
             'selected_period': period_data.period_name,
             'start_date': period_data.start_date.strftime('%d/%m/%Y'),
@@ -127,23 +147,6 @@ class FinancialCalculator:
             your_commission_monthly=round(monthly_commission, 2),
             breakdown=breakdown,
             transaction_hash=f"0x{transaction_hash}",
-            period_summary=period_summary
-        )
-    
-    def _empty_metrics(self, period_name: str) -> FinancialMetrics:
-        """Retourne des métriques vides."""
-        return FinancialMetrics(
-            daily_gains=0,
-            monthly_projection=0,
-            period_gains=0,
-            your_commission_today=0,
-            your_commission_monthly=0,
-            breakdown={},
-            transaction_hash="0x0000",
-            period_summary={
-                'selected_period': period_name,
-                'total_days': 0,
-                'total_operations': 0,
-                'avg_daily_operations': 0
-            }
+            period_summary=period_summary,
+            metrics=metrics  
         )

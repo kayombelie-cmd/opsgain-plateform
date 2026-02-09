@@ -620,119 +620,274 @@ def render_financial_module(financial_metrics, period_data):
     col_fin1, col_fin2 = st.columns([2, 1])
     
     with col_fin1:
-        st.markdown("#### 📊 GAINS FINANCIERS BASÉS SUR LA PÉRIODE")
-        
-        fin_col1, fin_col2, fin_col3 = st.columns(3)
-        
-        with fin_col1:
-            st.markdown(f"""
-            <div class="commission-card">
-                <h3 style="color: white; margin: 0; font-size: 2rem;">${financial_metrics.daily_gains:,.0f}</h3>
-                <p style="margin: 0; opacity: 0.9;">Gains journaliers MOYENS</p>
-                <small>Basé sur {period_summary['total_days']} jours de données</small>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with fin_col2:
-            st.markdown(f"""
-            <div class="gain-card">
-                <h3 style="color: white; margin: 0; font-size: 2rem;">${financial_metrics.monthly_projection:,.0f}</h3>
-                <p style="margin: 0; opacity: 0.9;">Projection mensuelle</p>
-                <small>Extrapolé sur {st.session_state.working_days} jours ouvrables</small>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with fin_col3:
-            st.markdown(f"""
-            <div style="background: linear-gradient(135deg, {COLORS['primary']} 0%, #1E40AF 100%); 
-                        color: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
-                <h3 style="color: white; margin: 0; font-size: 2rem;">${financial_metrics.your_commission_today:,.0f}</h3>
-                <p style="margin: 0; opacity: 0.9;">Votre commission journalière</p>
-                <small>Fixe + {st.session_state.commission_rate*100}% des gains</small>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("#### 📈 RÉPARTITION DES GAINS (MOYENNE JOURNALIÈRE)")
-        
-        chart_gen = ChartGenerator()
-        fig_fin = chart_gen.create_financial_pie_chart(financial_metrics.breakdown)
-        st.plotly_chart(fig_fin, use_container_width=True)
-        
-        # Détails des calculs
-        with st.expander("📋 **DÉTAILS DES CALCULS BASÉS SUR LA PÉRIODE SÉLECTIONNÉE**", expanded=False):
-            breakdown = financial_metrics.breakdown
-            
-            st.markdown(f"""
-            **📅 PÉRIODE ANALYSÉE :**
-            - Sélection : **{period_summary['selected_period']}**
-            - Du {period_summary['start_date']} au {period_summary['end_date']}
-            - Nombre de jours : **{period_summary['total_days']} jours**
-            - **Hash des données :** `{PUBLIC_DATA_HASH}`
-            
-            **💰 RÉPARTITION DES GAINS :**
-            - Gain temps journalier : **${breakdown.get('time_gain', 0):,.2f}** (Total période: ${breakdown.get('time_gain_period', 0):,.2f})
-            - Gain erreurs journalier : **${breakdown.get('error_gain', 0):,.2f}** (Total période: ${breakdown.get('error_gain_period', 0):,.2f})
-            - Gain maintenance journalier : **${breakdown.get('maintenance_gain', 0):,.2f}** (Total période: ${breakdown.get('maintenance_gain_period', 0):,.2f})
-            - Gain carburant journalier : **${breakdown.get('fuel_gain', 0):,.2f}** (Total période: ${breakdown.get('fuel_gain_period', 0):,.2f})
-            
-            **📊 SYNTHÈSE :**
-            - Gains journaliers moyens : **${financial_metrics.daily_gains:,.2f}/jour**
-            - Gains totaux période : **${financial_metrics.period_gains:,.2f}**
-            - Projection mensuelle : **${financial_metrics.monthly_projection:,.2f}**
-            
-            **💵 VOTRE COMMISSION :**
-            - Fixe mensuel : **${st.session_state.monthly_fixed:,.2f}**
-            - Taux commission : **{st.session_state.commission_rate*100}%**
-            - Commission journalière : **${financial_metrics.your_commission_today:,.2f}**
-            - Commission mensuelle : **${financial_metrics.your_commission_monthly:,.2f}**
-            
-            **🔍 VÉRIFICATION :**
-            - Hash de calcul : `{financial_metrics.transaction_hash}`
-            - Dernière mise à jour : {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
-            """)
     
-    with col_fin2:
-        st.markdown("#### 🎯 VOTRE REVENU MENSUEL")
-        
+        st.markdown("#### 📊 GAINS FINANCIERS BASÉS SUR LA PÉRIODE")
+    
+    # Première ligne : 4 cartes de métriques
+    fin_row1_col1, fin_row1_col2, fin_row1_col3, fin_row1_col4 = st.columns(4)
+    
+    with fin_row1_col1:
+        st.markdown(f"""
+        <div class="commission-card">
+            <h3 style="color: white; margin: 0; font-size: 2rem;">${financial_metrics.daily_gains:,.0f}</h3>
+            <p style="margin: 0; opacity: 0.9;">Gains journaliers</p>
+            <small>Basé sur {period_summary['total_days']} jours</small>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with fin_row1_col2:
+        st.markdown(f"""
+        <div class="gain-card">
+            <h3 style="color: white; margin: 0; font-size: 2rem;">${financial_metrics.monthly_projection:,.0f}</h3>
+            <p style="margin: 0; opacity: 0.9;">Projection mensuelle</p>
+            <small>Sur {st.session_state.working_days} jours ouvrables</small>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with fin_row1_col3:
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, {COLORS['primary']} 0%, #1E40AF 100%); 
+                    color: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+            <h3 style="color: white; margin: 0; font-size: 2rem;">${financial_metrics.your_commission_today:,.0f}</h3>
+            <p style="margin: 0; opacity: 0.9;">Commission journalière</p>
+            <small>Fixe + {st.session_state.commission_rate*100}% des gains</small>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with fin_row1_col4:
         st.markdown(f"""
         <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); 
-                    color: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
-            <h1 style="color: white; margin: 0; font-size: 2.8rem;">${financial_metrics.your_commission_monthly:,.0f}</h1>
-            <p style="opacity: 0.9; font-size: 1.1rem;">Commission mensuelle projetée</p>
+                    color: white; padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+            <h3 style="color: white; margin: 0; font-size: 2rem;">${financial_metrics.your_commission_monthly:,.0f}</h3>
+            <p style="opacity: 0.9; font-size: 1rem;">🎯 Votre revenu mensuel</p>
             <small>Basé sur la performance de {period_data.period_name}</small>
         </div>
         """, unsafe_allow_html=True)
+            # ==================== LIGNE 2 : GRAPHIQUE + RÉSUMÉ ====================
+    st.markdown("---")
+    
+    col_graphique, col_resume = st.columns([3, 2])  # 60% graphique, 40% résumé
+    
+    with col_graphique:
+        st.markdown("#### 📈 RÉPARTITION DES GAINS (MOYENNE JOURNALIÈRE)")
         
+        # Graphique camembert
+        chart_gen = ChartGenerator()
+        fig_fin = chart_gen.create_financial_pie_chart(financial_metrics.breakdown)
+        st.plotly_chart(fig_fin, use_container_width=True)
+    
+    with col_resume:
+        
+        # Carte récapitulatif contrat
         st.markdown("#### 📝 RÉCAPITULATIF CONTRAT")
         
-        import pandas as pd
-        summary_data = {
-            'Paramètre': ['Fixé mensuel', 'Taux commission', 'Jours ouvrables', 'Coût horaire', 'Coût erreur'],
-            'Valeur': [
-                f"${st.session_state.monthly_fixed:,.0f}",
-                f"{st.session_state.commission_rate*100}%",
-                f"{st.session_state.working_days} jours",
-                f"${st.session_state.hourly_cost}/h",
-                f"${st.session_state.error_cost}"
-            ]
-        }
+        st.markdown('''
+        <div style="
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        ">
+        ''', unsafe_allow_html=True)
         
-        st.dataframe(pd.DataFrame(summary_data), use_container_width=True)
+        # Tableau vertical simple
+        st.markdown(f"""
+        <div style="line-height: 2.2;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #E5E7EB; padding: 8px 0;">
+                <span style="font-weight: 600; color: #4B5563;">Fixé mensuel</span>
+                <span style="font-weight: 700; color: #1E3A8A;">${st.session_state.monthly_fixed:,.0f}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #E5E7EB; padding: 8px 0;">
+                <span style="font-weight: 600; color: #4B5563;">Taux commission</span>
+                <span style="font-weight: 700; color: #10B981;">{st.session_state.commission_rate*100}%</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #E5E7EB; padding: 8px 0;">
+                <span style="font-weight: 600; color: #4B5563;">Jours ouvrables</span>
+                <span style="font-weight: 700; color: #F59E0B;">{st.session_state.working_days} jours</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #E5E7EB; padding: 8px 0;">
+                <span style="font-weight: 600; color: #4B5563;">Coût horaire</span>
+                <span style="font-weight: 700; color: #8B5CF6;">${st.session_state.hourly_cost}/h</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                <span style="font-weight: 600; color: #4B5563;">Coût erreur</span>
+                <span style="font-weight: 700; color: #EF4444;">${st.session_state.error_cost}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        st.markdown("#### 🔒 VÉRIFICATION")
-        st.code(f"Hash: {financial_metrics.transaction_hash}")
-        st.caption(f"Période: {period_data.period_name}")
-        st.caption(f"Hash des données: {PUBLIC_DATA_HASH}")
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        if st.button("📤 Exporter rapport financier", use_container_width=True, type="secondary"):
-            with st.spinner("Génération du rapport..."):
-                time.sleep(2)
-                st.success(f"✅ Rapport exporté pour {period_data.period_name}")
+        # Section vérification
+        st.markdown("#### 🔒 VÉRIFICATION & ACTIONS")
         
-        if st.button("🔄 Mettre à jour les calculs", use_container_width=True):
-            st.rerun()
-
-
+        with st.container():
+            st.info(f"""
+            **Période analysée :** {period_data.period_name}
+            **Hash de calcul :** `{financial_metrics.transaction_hash}`
+            **Hash des données :** `{PUBLIC_DATA_HASH}`
+            """)
+            
+            col_btn1, col_btn2 = st.columns(2)
+            with col_btn1:
+                if st.button("📤 Exporter rapport", use_container_width=True, type="secondary"):
+                    with st.spinner("Génération..."):
+                        time.sleep(1)
+                        st.success("✅ Rapport généré")
+            
+            with col_btn2:
+                if st.button("🔄 Actualiser", use_container_width=True):
+                    st.rerun()
+    
+    # ==================== LIGNE 3 : DÉTAILS DES CALCULS ====================
+    st.markdown("---")
+    st.markdown("#### 📋 DÉTAILS DES CALCULS - ANALYSE FINANCIÈRE")
+    
+    with st.expander("🔍 Afficher les calculs détaillés", expanded=True):
+        # Copiez ici tout votre code de calculs détaillés
+        st.markdown(f"""
+        ### 📅 PÉRIODE ANALYSÉE
+        **Du :** {period_summary['start_date']}
+        **Au :** {period_summary['end_date']}
+        **Nombre de jours :** {period_summary['total_days']} jours
+        **Hash des données :** `{PUBLIC_DATA_HASH}`
+        """)
+        
+        st.divider()
+        
+        # Section Gain Temps
+        st.markdown("""
+        ### 1. GAIN TEMPS (Réduction de durée des opérations)
+        """)
+        
+        baseline_duration = st.session_state.baseline_duration
+        avg_duration = period_summary['avg_duration']
+        hourly_cost = st.session_state.hourly_cost
+        total_ops = period_summary['total_operations']
+        
+        time_saved_minutes = max(0, baseline_duration - avg_duration)
+        time_saved_hours = time_saved_minutes / 60
+        gain_per_op = time_saved_hours * hourly_cost
+        total_time_gain = gain_per_op * total_ops
+        
+        st.markdown(f"""
+        **Paramètres :**
+        - Durée de référence : {baseline_duration} minutes
+        - Durée moyenne période : {avg_duration:.1f} minutes
+        - Coût horaire moyen : ${hourly_cost}/heure
+        - Total opérations période : {total_ops:,} opérations
+        
+        **Calcul :**
+        - Économie par opération : {time_saved_minutes:.1f} minutes = {time_saved_hours:.3f} heures
+        - Gain par opération : {time_saved_hours:.3f} h × ${hourly_cost}$/h = ${gain_per_op:.2f}$
+        - Gain total temps : {total_ops:,} opérations × ${gain_per_op:.2f} = ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
+        - Gain journalier moyen : ${financial_metrics.breakdown.get('time_gain', 0):,.2f}$/jour
+        """)
+        
+        st.divider()
+        
+        # Section Gain Erreurs
+        st.markdown("""
+        ### 2. GAIN ERREURS (Réduction des erreurs)
+        """)
+        
+        baseline_error_rate = st.session_state.baseline_error_rate * 100
+        current_error_rate = period_summary['error_rate']
+        error_cost = st.session_state.error_cost
+        
+        errors_avoided = max(0, (baseline_error_rate - current_error_rate) / 100 * total_ops)
+        total_error_gain = errors_avoided * error_cost
+        
+        st.markdown(f"""
+        **Paramètres :**
+        - Taux erreur référence : {baseline_error_rate:.1f}%
+        - Taux erreur période : {current_error_rate:.1f}%
+        - Coût par erreur : ${error_cost}
+        - Total opérations période : {total_ops:,} opérations
+        
+        **Calcul :**
+        - Erreurs évitées : ({baseline_error_rate:.1f}% - {current_error_rate:.1f}%) × {total_ops:,} = **{errors_avoided:.1f}** erreurs
+        - Gain total erreurs : {errors_avoided:.1f} erreurs × ${error_cost} = ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
+        - Gain journalier moyen : ${financial_metrics.breakdown.get('error_gain', 0):,.2f}$/jour
+        """)
+        
+        st.divider()
+        
+        # Section Gain Maintenance
+        st.markdown("""
+        ### 3. GAIN MAINTENANCE (Prévention des pannes)
+        """)
+        
+        maintenance_alerts = 0  # À calculer si vous avez cette donnée
+        maintenance_cost = 500
+        
+        st.markdown(f"""
+        **Paramètres :**
+        - Alertes maintenance détectées : {maintenance_alerts} alertes
+        - Coût évité par alerte : ${maintenance_cost}
+        
+        **Calcul :**
+        - Gain total maintenance : {maintenance_alerts} × ${maintenance_cost} = ${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}$
+        - Gain journalier moyen : ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}$/jour
+        """)
+        
+        st.divider()
+        
+        # Section Gain Carburant
+        st.markdown("""
+        ### 4. GAIN CARBURANT (Optimisation des trajets)
+        """)
+        
+        trucks_per_day = min(500, period_summary['avg_daily_operations'] * 0.3)
+        fuel_saving = 1.5
+        
+        daily_fuel_gain = trucks_per_day * fuel_saving
+        total_fuel_gain = daily_fuel_gain * period_summary['total_days']
+        
+        st.markdown(f"""
+        **Paramètres :**
+        - Camions par jour : {trucks_per_day:.0f} camions
+        - Économie par camion : ${fuel_saving}/jour
+        - Nombre de jours : {period_summary['total_days']} jours
+        
+        **Calcul :**
+        - Gain carburant journalier : {trucks_per_day:.0f} × ${fuel_saving} = ${daily_fuel_gain:.2f}$/jour
+        - Gain total carburant : ${daily_fuel_gain:.2f}/jour × {period_summary['total_days']} jours = ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
+        """)
+        
+        st.divider()
+        
+        # Synthèse finale
+        st.markdown("""
+        ### 📊 SYNTHÈSE FINANCIÈRE
+        """)
+        
+        st.markdown(f"""
+        **Gains totaux sur la période :**
+        - Gain temps : **${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}**
+        - Gain erreurs : **${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}**
+        - Gain maintenance : **${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}**
+        - Gain carburant : **${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}**
+        
+        **Total gains période :** **${financial_metrics.period_gains:,.2f}**
+        
+        **Moyennes journalières :**
+        - Gain temps : **${financial_metrics.breakdown.get('time_gain', 0):,.2f}/jour**
+        - Gain erreurs : **${financial_metrics.breakdown.get('error_gain', 0):,.2f}/jour**
+        - Gain maintenance : **${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}/jour**
+        - Gain carburant : **${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}/jour**
+        
+        **Total gains journaliers :** **${financial_metrics.daily_gains:,.2f}/jour**
+        
+        **Projection mensuelle ({st.session_state.working_days} jours) :**
+        - **${financial_metrics.daily_gains:,.2f}/jour × {st.session_state.working_days} jours = ${financial_metrics.monthly_projection:,.2f}$**
+        
+        **Votre commission :**
+        - Fixe mensuel : **${st.session_state.monthly_fixed:,.2f}**
+        - Variable ({st.session_state.commission_rate*100}%) : **${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}**
+        - Commission totale : **${financial_metrics.your_commission_monthly:,.2f}**
+        """)
 def render_footer(financial_metrics, period_name):
     """Affiche le footer."""
     st.markdown("---")

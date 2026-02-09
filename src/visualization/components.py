@@ -127,6 +127,32 @@ class UIComponents:
                 border-radius: 8px;
                 font-weight: 600;
             }}
+            
+            /* Cartes métriques financières améliorées */
+            .metric-highlight {{
+                background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                color: white;
+                padding: 25px;
+                border-radius: 15px;
+                text-align: center;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+                border: 2px solid #10B981;
+                transition: transform 0.3s ease;
+            }}
+            
+            .metric-highlight:hover {{
+                transform: translateY(-5px);
+            }}
+            
+            .metric-card-small {{
+                background: white;
+                padding: 20px;
+                border-radius: 12px;
+                box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+                border-top: 4px solid #3B82F6;
+                text-align: center;
+                height: 100%;
+            }}
         </style>
         """
     

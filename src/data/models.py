@@ -18,7 +18,7 @@ class FinancialMetrics:
     breakdown: Dict[str, float]
     transaction_hash: str
     period_summary: Dict[str, any]
-    
+    metrics: Dict[str, any]
     def to_dict(self) -> Dict:
         """Convertit en dictionnaire pour sérialisation."""
         return {
@@ -29,7 +29,8 @@ class FinancialMetrics:
             'your_commission_monthly': self.your_commission_monthly,
             'breakdown': self.breakdown,
             'transaction_hash': self.transaction_hash,
-            'period_summary': self.period_summary
+            'period_summary': self.period_summary,
+            'metrics': self.metrics  # ← AJOUTEZ CETTE LIGNE
         }
 
 
