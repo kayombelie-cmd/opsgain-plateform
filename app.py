@@ -819,7 +819,7 @@ def render_financial_module(financial_metrics, period_data):
         ### 3. GAIN MAINTENANCE (Prévention des pannes)
         """)
         
-        maintenance_alerts = 0  # À calculer si vous avez cette donnée
+        maintenance_alerts > 0  # À calculer si vous avez cette donnée
         maintenance_cost = 500
         
         st.markdown(f"""
