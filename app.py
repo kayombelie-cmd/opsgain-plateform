@@ -781,7 +781,7 @@ def render_financial_module(financial_metrics, period_data):
         **Calcul :**
         - Économie par opération : {time_saved_minutes:.1f} minutes = {time_saved_hours:.3f} heures
         - Gain par opération : {time_saved_hours:.3f} h × ${hourly_cost}$/h = ${gain_per_op:.2f}$
-        - Gain total temps : {total_ops:,} opérations × ${gain_per_op:.2f} = ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
+        - Gain total temps : {total_ops:,} opérations × ${gain_per_op:.2f}$ = ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
         - Gain journalier moyen : ${financial_metrics.breakdown.get('time_gain', 0):,.2f}$/jour
         """)
         
@@ -808,7 +808,7 @@ def render_financial_module(financial_metrics, period_data):
         
         **Calcul :**
         - Erreurs évitées : ({baseline_error_rate:.1f}% - {current_error_rate:.1f}%) × {total_ops:,} = **{errors_avoided:.1f}** erreurs
-        - Gain total erreurs : {errors_avoided:.1f} erreurs × ${error_cost} = ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
+        - Gain total erreurs : {errors_avoided:.1f} erreurs × ${error_cost}$ = ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
         - Gain journalier moyen : ${financial_metrics.breakdown.get('error_gain', 0):,.2f}$/jour
         """)
         
