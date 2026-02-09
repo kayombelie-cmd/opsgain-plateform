@@ -814,21 +814,29 @@ def render_financial_module(financial_metrics, period_data):
         
         st.divider()
         
-        # Section Gain Maintenance
+                # Section Gain Maintenance
         st.markdown("""
         ### 3. GAIN MAINTENANCE (Prévention des pannes)
         """)
         
-        maintenance_alerts > 0  # À calculer si vous avez cette donnée
+        # Récupérer le nombre d'alertes de maintenance
         maintenance_cost = 500
+        maintenance_gain_period = financial_metrics.breakdown.get('maintenance_gain_period', 0)
+        
+        # Calculer le nombre d'alertes à partir du gain
+        if maintenance_cost > 0:
+            maintenance_alerts = int(maintenance_gain_period / maintenance_cost)
+        else:
+            maintenance_alerts = 0
         
         st.markdown(f"""
         **Paramètres :**
         - Alertes maintenance détectées : {maintenance_alerts} alertes
         - Coût évité par alerte : ${maintenance_cost}
+        - Gain total maintenance période : ${maintenance_gain_period:,.2f}$
         
         **Calcul :**
-        - Gain total maintenance : {maintenance_alerts} × ${maintenance_cost} = ${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}$
+        - Gain total maintenance :${maintenance_alerts} alertes × ${maintenance_cost}/alerte = ${maintenance_gain_period:,.2f}$
         - Gain journalier moyen : ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}$/jour
         """)
         
