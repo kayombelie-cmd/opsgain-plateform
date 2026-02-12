@@ -4,6 +4,7 @@ Gestion de l'authentification.
 import streamlit as st
 
 from .config import DEFAULT_PASSWORD, APP_NAME, APP_VERSION
+from src.utils.i18n import i18n
 from .utils.logger import setup_logger
 
 logger = setup_logger(__name__)
