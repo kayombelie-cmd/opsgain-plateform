@@ -23,21 +23,21 @@ logger = setup_logger(__name__)
 
 def main():
     """Fonction principale de l'application."""
-    # Initialisation de la langue
-    if 'language' not in st.session_state:
-        st.session_state.language = 'fr'
-    i18n.set_language(st.session_state.language)
-
-    # Vérification de l'authentification
-    Authentication.check_auth()
-
-    # Configuration de la page
+    # --- ⚠️ DOIT ÊTRE LA PREMIÈRE COMMANDE STREAMLIT ---
     st.set_page_config(
         page_title=APP_NAME,
         page_icon="🚛",
         layout="wide",
         initial_sidebar_state="expanded"
     )
+
+    # --- Initialisation après set_page_config ---
+    if 'language' not in st.session_state:
+        st.session_state.language = 'fr'
+    i18n.set_language(st.session_state.language)
+
+    # Vérification de l'authentification
+    Authentication.check_auth()
 
     # Application du CSS
     st.markdown(UIComponents.style_css(), unsafe_allow_html=True)
