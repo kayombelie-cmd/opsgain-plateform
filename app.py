@@ -80,7 +80,7 @@ def render_sidebar(data_sync):
         st.markdown(f"### 🎯 **{APP_NAME}**")
         st.markdown("---")
 
-        if st.button("🚀 **Lancer la démonstration complète**", type="primary", width='stretch'):  # <-- width='stretch'
+        if st.button("🚀 **Lancer la démonstration complète**", type="primary"):  # <-- width='stretch'
             st.session_state.demo_launched = True
             st.rerun()
 
@@ -278,7 +278,7 @@ def render_sync_section(data_sync):
     3. Envoyez-le à vos collaborateurs
     """)
 
-    if st.button("🔗 Générer lien de partage", width='stretch', type="secondary"):  # <-- width='stretch'
+    if st.button("🔗 Générer lien de partage",type="secondary"):  # <-- width='stretch'
         selected_period = st.session_state.get('selected_period', '30 derniers jours')
         start_date = st.session_state.get('start_date', datetime.now() - timedelta(days=30))
         end_date = st.session_state.get('end_date', datetime.now())
@@ -744,12 +744,12 @@ def render_financial_module(financial_metrics, period_data):
 
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
-            if st.button("📤 Exporter rapport", width='stretch', type="secondary"):  # <-- width='stretch'
+            if st.button("📤 Exporter rapport", type="secondary"):  # <-- width='stretch'
                 with st.spinner("Génération..."):
                     time.sleep(1)
                     st.success("✅ Rapport généré")
         with col_btn2:
-            if st.button("🔄 Actualiser", width='stretch'):  # <-- width='stretch'
+            if st.button("🔄 Actualiser", type="primary"):  # <-- width='stretch'
                 st.rerun()
 
     st.markdown("---")
