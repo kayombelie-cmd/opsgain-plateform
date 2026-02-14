@@ -74,4 +74,4 @@ APP_NAME = "OPSGAIN PLATEFORM/PORT INTELLIGENT"
 APP_DESCRIPTION = "La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel"
 
 # URLs
-DEFAULT_BASE_URL =  "https://opsgain-plateform-d6bfhnyytcd6dw2oaqqbd3.streamlit.app/"
+DEFAULT_BASE_URL =  "https://https://opsgain-plateform-kyrqqc6ibx2um8cbnqo5bg.streamlit.app//"
