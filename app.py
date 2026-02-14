@@ -4,7 +4,7 @@ Point d'entrée principal de l'application OpsGain Platform.
 import streamlit as st
 import time
 from datetime import datetime, timedelta
-from streamlit_folium import st_folium  # <-- REMPLACÉ
+from streamlit_folium import st_folium
 from src.utils.i18n import i18n
 
 # Import des modules refactorés
@@ -23,7 +23,6 @@ logger = setup_logger(__name__)
 
 def main():
     """Fonction principale de l'application."""
-    # --- ⚠️ DOIT ÊTRE LA PREMIÈRE COMMANDE STREAMLIT ---
     st.set_page_config(
         page_title=APP_NAME,
         page_icon="🚛",
@@ -31,37 +30,27 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # --- Initialisation après set_page_config ---
     if 'language' not in st.session_state:
         st.session_state.language = 'fr'
     i18n.set_language(st.session_state.language)
 
-    # Vérification de l'authentification
     Authentication.check_auth()
 
-    # Application du CSS
     st.markdown(UIComponents.style_css(), unsafe_allow_html=True)
 
-    # Initialisation des services
     data_sync = DataSynchronizer()
     finance_calc = FinancialCalculator(st.session_state)
     chart_gen = ChartGenerator()
     map_gen = MapGenerator()
 
-    # Sidebar
     render_sidebar(data_sync)
 
-    # Chargement des données
     with st.spinner("Chargement des données synchronisées..."):
         period_data = data_sync.load_period_data()
 
-    # Calcul des métriques financières
     financial_metrics = finance_calc.calculate(period_data)
 
-    # En-tête principal
     render_header(period_data.period_name)
-
-    # Affichage des sections
     render_operational_summary(period_data, financial_metrics)
     render_performance_analysis(period_data, chart_gen)
     render_equipment_performance(period_data, chart_gen)
@@ -69,18 +58,15 @@ def main():
     render_alerts_and_activity(period_data)
     render_recommendations(period_data)
     render_financial_module(financial_metrics, period_data)
-
-    # Footer
     render_footer(financial_metrics, period_data.period_name)
 
 
 def render_sidebar(data_sync):
-    """Affiche la sidebar."""
     with st.sidebar:
         st.markdown(f"### 🎯 **{APP_NAME}**")
         st.markdown("---")
 
-        if st.button("🚀 **Lancer la démonstration complète**", type="primary"):  # <-- width='stretch'
+        if st.button("🚀 **Lancer la démonstration complète**", type="primary"):
             st.session_state.demo_launched = True
             st.rerun()
 
@@ -90,19 +76,14 @@ def render_sidebar(data_sync):
         default_end = datetime.now()
         default_start = default_end - timedelta(days=30)
 
-        # Sélecteur de période
         period_option = st.selectbox(
             "Sélectionner la période",
             options=list(PERIODS.keys())
         )
 
-        # Gestion des dates
         handle_period_selection(period_option, default_start, default_end)
-
-        # Filtres
         render_filters()
 
-        # ---------- SÉLECTEUR DE LANGUE ----------
         st.markdown("---")
         st.markdown("### 🌍 **LANGUE**")
 
@@ -117,20 +98,13 @@ def render_sidebar(data_sync):
             st.session_state.language = language
             i18n.set_language(language)
             st.rerun()
-        # ------------------------------------------
 
-        # Paramètres financiers
         render_financial_params()
-
-        # Synchronisation
         render_sync_section(data_sync)
-
-        # Informations
         render_info_section()
 
 
 def handle_period_selection(period_option, default_start, default_end):
-    """Gère la sélection de période."""
     if period_option == "Personnalisée":
         col1, col2 = st.columns(2)
         with col1:
@@ -150,7 +124,6 @@ def handle_period_selection(period_option, default_start, default_end):
 
 
 def render_filters():
-    """Affiche les filtres dans la sidebar."""
     st.markdown("---")
     st.markdown("### 🔧 **FILTRES**")
 
@@ -166,14 +139,11 @@ def render_filters():
 
 
 def render_financial_params():
-    """Affiche les paramètres financiers."""
     st.markdown("---")
     st.markdown("### 💰 **PARAMÈTRES FINANCIERS**")
 
-    # Initialisation des paramètres
     init_financial_params()
 
-    # Interface
     col1, col2 = st.columns(2)
     with col1:
         monthly_fixed = st.number_input(
@@ -254,7 +224,6 @@ def render_financial_params():
 
 
 def init_financial_params():
-    """Initialise les paramètres financiers dans session_state."""
     from src.config import FINANCIAL_PARAMS
 
     defaults = FINANCIAL_PARAMS.copy()
@@ -265,7 +234,6 @@ def init_financial_params():
 
 
 def render_sync_section(data_sync):
-    """Affiche la section de synchronisation."""
     st.markdown("---")
     st.markdown("### 🔗 **PARTAGE DE DONNÉES SYNCHRONISÉES**")
 
@@ -278,7 +246,7 @@ def render_sync_section(data_sync):
     3. Envoyez-le à vos collaborateurs
     """)
 
-    if st.button("🔗 Générer lien de partage",type="secondary"):  # <-- width='stretch'
+    if st.button("🔗 Générer lien de partage", type="secondary"):
         selected_period = st.session_state.get('selected_period', '30 derniers jours')
         start_date = st.session_state.get('start_date', datetime.now() - timedelta(days=30))
         end_date = st.session_state.get('end_date', datetime.now())
@@ -290,7 +258,6 @@ def render_sync_section(data_sync):
         st.success(f"✅ Lien généré ! ID de suivi: {link_id}")
         st.code(share_url, language="text")
 
-        # Bouton pour ouvrir
         st.markdown(f"""
         <a href="{share_url}" target="_blank">
             <button style="
@@ -311,7 +278,6 @@ def render_sync_section(data_sync):
 
 
 def render_info_section():
-    """Affiche la section d'informations."""
     st.markdown("---")
     st.markdown("#### 📊 **INFORMATIONS**")
     st.markdown(f"**OpsGain Plateform Version:** {APP_VERSION}")
@@ -322,7 +288,6 @@ def render_info_section():
 
 
 def render_header(period_name):
-    """Affiche l'en-tête principal."""
     col1, col2 = st.columns([1, 5])
 
     with col1:
@@ -346,11 +311,9 @@ def render_header(period_name):
         st.markdown(f"**Dashboard opérationnel synchronisé | Période: {period_name} | Données Simulées 2026**")
         st.markdown("**Vos Operations Nos Gains. | La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel.**")
 
-    # Badge de synchronisation
     UIComponents.render_sync_badge()
     st.markdown("---")
 
-    # Démonstration (si lancée)
     if st.session_state.get('demo_launched', False):
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -368,7 +331,6 @@ def render_header(period_name):
 
 
 def render_operational_summary(period_data, financial_metrics):
-    """Affiche la synthèse opérationnelle."""
     st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.operational_summary", "📊 SYNTHÈSE OPÉRATIONNELLE")}</h2>', unsafe_allow_html=True)
 
     col1, col2, col3, col4 = st.columns(4)
@@ -418,7 +380,6 @@ def render_operational_summary(period_data, financial_metrics):
 
 
 def render_performance_analysis(period_data, chart_gen):
-    """Affiche l'analyse des performances."""
     st.markdown('<h2 class="section-title">📈 ANALYSE DES PERFORMANCES</h2>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
@@ -430,7 +391,7 @@ def render_performance_analysis(period_data, chart_gen):
                 period_data.daily_data,
                 period_data.period_name
             )
-            st.plotly_chart(fig1, width='stretch')  # <-- width='stretch'
+            st.plotly_chart(fig1, use_container_width=True)  # CORRIGÉ
         else:
             UIComponents.render_alert("Aucune donnée disponible", "warning")
 
@@ -438,13 +399,12 @@ def render_performance_analysis(period_data, chart_gen):
         st.markdown("#### 🕒 Distribution Horaire")
         if not period_data.hourly_data.empty:
             fig2 = chart_gen.create_hourly_distribution_chart(period_data.hourly_data)
-            st.plotly_chart(fig2, width='stretch')  # <-- width='stretch'
+            st.plotly_chart(fig2, use_container_width=True)  # CORRIGÉ
         else:
             UIComponents.render_alert("Aucune donnée horaire disponible", "warning")
 
 
 def render_equipment_performance(period_data, chart_gen):
-    """Affiche la performance des équipements."""
     st.markdown('<h2 class="section-title">🏗️ PERFORMANCE DES ÉQUIPEMENTS</h2>', unsafe_allow_html=True)
 
     col1, col2 = st.columns([2, 1])
@@ -452,7 +412,7 @@ def render_equipment_performance(period_data, chart_gen):
     with col1:
         if not period_data.engins_data.empty:
             fig3 = chart_gen.create_engins_performance_chart(period_data.engins_data)
-            st.plotly_chart(fig3, width='stretch')  # <-- width='stretch'
+            st.plotly_chart(fig3, use_container_width=True)  # CORRIGÉ
         else:
             UIComponents.render_alert("Aucune donnée d'équipement disponible", "warning")
 
@@ -482,14 +442,13 @@ def render_equipment_performance(period_data, chart_gen):
 
 
 def render_realtime_map(map_gen):
-    """Affiche la carte interactive."""
     st.markdown('<h2 class="section-title">🗺️ CARTE TEMPS-RÉEL DU PORT</h2>', unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 1])
 
     with col1:
         port_map = map_gen.create_realtime_map()
-        st_folium(port_map, width=800, height=500)  # <-- REMPLACÉ
+        st_folium(port_map, width=800, height=500)
 
     with col2:
         st.markdown("#### 🔍 FILTRES")
@@ -516,7 +475,6 @@ def render_realtime_map(map_gen):
 
 
 def render_alerts_and_activity(period_data):
-    """Affiche les alertes et l'activité en temps réel."""
     st.markdown('<h2 class="section-title">🚨 ALERTES ET ACTIVITÉ EN TEMPS RÉEL</h2>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
@@ -526,7 +484,6 @@ def render_alerts_and_activity(period_data):
 
         alerts = []
 
-        # Détection d'alertes
         if not period_data.daily_data.empty and len(period_data.daily_data) > 1:
             latest_day = period_data.daily_data.iloc[-1]
             avg_operations = period_data.daily_data['nb_operations'].mean()
@@ -537,7 +494,6 @@ def render_alerts_and_activity(period_data):
             if latest_day['erreurs'] > 0 and (latest_day['erreurs'] / latest_day['nb_operations']) > 0.03:
                 alerts.append("❌ **Taux d'erreur critique** - Supérieur à 3%")
 
-        # Alertes de maintenance
         if not period_data.engins_data.empty:
             period_data.engins_data['taux_erreur'] = (
                 period_data.engins_data['erreurs'] /
@@ -548,7 +504,6 @@ def render_alerts_and_activity(period_data):
             for _, engin in engins_problematiques.iterrows():
                 alerts.append(f"⚠️ **Maintenance préventive requise** - {engin['engin']} (taux erreur: {engin['taux_erreur']:.1f}%)")
 
-        # Affichage des alertes
         if alerts:
             for alert in alerts:
                 if "❌" in alert or "⚠️" in alert:
@@ -582,12 +537,10 @@ def render_alerts_and_activity(period_data):
 
 
 def render_recommendations(period_data):
-    """Affiche les recommandations intelligentes."""
     st.markdown('<h2 class="section-title">💡 RECOMMANDATIONS INTELLIGENTES</h2>', unsafe_allow_html=True)
 
     recommendations = []
 
-    # Recommandation basée sur les zones
     if not period_data.recent_ops.empty and 'urgence' in period_data.recent_ops.columns:
         zone_urgences = period_data.recent_ops.groupby('zone')['urgence'].sum()
         if len(zone_urgences) > 0 and zone_urgences.max() > 0:
@@ -595,7 +548,6 @@ def render_recommendations(period_data):
             nb_urgences = int(zone_urgences.max())
             recommendations.append(f"**Optimiser {zone_probleme}** : {nb_urgences} urgences détectées")
 
-    # Recommandation maintenance
     if not period_data.engins_data.empty:
         period_data.engins_data['taux_erreur'] = (
             period_data.engins_data['erreurs'] /
@@ -606,7 +558,6 @@ def render_recommendations(period_data):
             if engin_probleme['taux_erreur'] > 2.0:
                 recommendations.append(f"**Maintenance {engin_probleme['engin']}** : Taux erreur: {engin_probleme['taux_erreur']:.1f}%")
 
-    # Recommandation équilibrage
     if not period_data.hourly_data.empty:
         heure_pic = period_data.hourly_data.loc[period_data.hourly_data['nb_operations'].idxmax(), 'heure']
         ops_pic = period_data.hourly_data['nb_operations'].max()
@@ -616,7 +567,6 @@ def render_recommendations(period_data):
         if ops_pic > ops_creux * 1.5:
             recommendations.append(f"**Équilibrage charge** : Déplacer des opérations de {heure_pic}h vers {heure_creux}h")
 
-    # Affichage des recommandations
     if recommendations:
         for i, rec in enumerate(recommendations, 1):
             st.markdown(f"{i}. {rec}")
@@ -625,23 +575,19 @@ def render_recommendations(period_data):
 
 
 def render_financial_module(financial_metrics, period_data):
-    """Affiche le module financier."""
     st.markdown('<h2 class="section-title">💰 MODULE FINANCIER</h2>', unsafe_allow_html=True)
 
-    # Résumé de période
     period_summary = financial_metrics.period_summary
     st.markdown(f"#### 📅 **ANALYSE FINANCIÈRE POUR : {period_data.period_name.upper()}**")
 
     UIComponents.render_period_summary(period_summary)
 
-    # Badge de données synchronisées
     st.markdown(f"""
     <div style="background: {COLORS['info']}; color: white; padding: 10px 15px; border-radius: 10px; margin: 10px 0;">
         🔒 **Données synchronisées** : Tous les utilisateurs voient exactement les mêmes chiffres
     </div>
     """, unsafe_allow_html=True)
 
-    # --- LIGNE 1 : 4 CARTES DE MÉTRIQUES ---
     st.markdown("#### 📊 GAINS FINANCIERS BASÉS SUR LA PÉRIODE")
 
     fin_row1_col1, fin_row1_col2, fin_row1_col3, fin_row1_col4 = st.columns(4)
@@ -686,14 +632,13 @@ def render_financial_module(financial_metrics, period_data):
 
     st.markdown("---")
 
-    # --- LIGNE 2 : GRAPHIQUE (gauche) + RÉSUMÉ (droite) ---
     col_graphique, col_resume = st.columns([3, 2])
 
     with col_graphique:
         st.markdown("#### 📈 RÉPARTITION DES GAINS (MOYENNE JOURNALIÈRE)")
         chart_gen = ChartGenerator()
         fig_fin = chart_gen.create_financial_pie_chart(financial_metrics.breakdown)
-        st.plotly_chart(fig_fin, width='stretch')  # <-- width='stretch'
+        st.plotly_chart(fig_fin, use_container_width=True)  # CORRIGÉ
 
     with col_resume:
         st.markdown("#### 📝 RÉCAPITULATIF CONTRAT")
@@ -744,17 +689,16 @@ def render_financial_module(financial_metrics, period_data):
 
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
-            if st.button("📤 Exporter rapport", type="secondary"):  # <-- width='stretch'
+            if st.button("📤 Exporter rapport", type="secondary"):
                 with st.spinner("Génération..."):
                     time.sleep(1)
                     st.success("✅ Rapport généré")
         with col_btn2:
-            if st.button("🔄 Actualiser", type="primary"):  # <-- width='stretch'
+            if st.button("🔄 Actualiser", type="primary"):
                 st.rerun()
 
     st.markdown("---")
 
-    # --- LIGNE 3 : DÉTAILS DES CALCULS (expander) ---
     st.markdown("#### 📋 DÉTAILS DES CALCULS - ANALYSE FINANCIÈRE")
 
     with st.expander("🔍 Afficher les calculs détaillés", expanded=True):
@@ -767,7 +711,6 @@ def render_financial_module(financial_metrics, period_data):
         """)
         st.divider()
 
-        # Section Gain Temps
         st.markdown("### 1. GAIN TEMPS (Réduction de durée des opérations)")
 
         baseline_duration = st.session_state.baseline_duration
@@ -789,13 +732,12 @@ def render_financial_module(financial_metrics, period_data):
 
         **Calcul :**
         - Économie par opération : {time_saved_minutes:.1f} minutes = {time_saved_hours:.3f} heures
-        - Gain par opération : {time_saved_hours:.3f} h × ${hourly_cost}/h = **${gain_per_op:.2f}**
-        - Gain total temps : {total_ops:,} opérations × ${gain_per_op:.2f} = **${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}**
-        - Gain journalier moyen : **${financial_metrics.breakdown.get('time_gain', 0):,.2f}/jour**
+        - Gain par opération : {time_saved_hours:.3f} h × ${hourly_cost}/h = ${gain_per_op:.2f}$
+        - Gain total temps : {total_ops:,} opérations × ${gain_per_op:.2f} = ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
+        - Gain journalier moyen : ${financial_metrics.breakdown.get('time_gain', 0):,.2f}$/jour
         """)
         st.divider()
 
-        # Section Gain Erreurs
         st.markdown("### 2. GAIN ERREURS (Réduction des erreurs)")
 
         baseline_error_rate = st.session_state.baseline_error_rate * 100
@@ -814,20 +756,16 @@ def render_financial_module(financial_metrics, period_data):
 
         **Calcul :**
         - Erreurs évitées : ({baseline_error_rate:.1f}% - {current_error_rate:.1f}%) × {total_ops:,} = **{errors_avoided:.1f}** erreurs
-        - Gain total erreurs : {errors_avoided:.1f} erreurs × ${error_cost} = **${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}**
-        - Gain journalier moyen : **${financial_metrics.breakdown.get('error_gain', 0):,.2f}/jour**
+        - Gain total erreurs : {errors_avoided:.1f} erreurs × ${error_cost} = ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
+        - Gain journalier moyen : ${financial_metrics.breakdown.get('error_gain', 0):,.2f}/jour
         """)
         st.divider()
 
-        # Section Gain Maintenance
         st.markdown("### 3. GAIN MAINTENANCE (Prévention des pannes)")
 
         maintenance_cost = 500
         maintenance_gain_period = financial_metrics.breakdown.get('maintenance_gain_period', 0)
-        if maintenance_cost > 0:
-            maintenance_alerts = int(maintenance_gain_period / maintenance_cost)
-        else:
-            maintenance_alerts = 0
+        maintenance_alerts = int(maintenance_gain_period / maintenance_cost) if maintenance_cost > 0 else 0
 
         st.markdown(f"""
         **Paramètres :**
@@ -836,12 +774,11 @@ def render_financial_module(financial_metrics, period_data):
         - Gain total maintenance période : ${maintenance_gain_period:,.2f}
 
         **Calcul :**
-        - Gain total maintenance : {maintenance_alerts} alertes × ${maintenance_cost}/alerte = **${maintenance_gain_period:,.2f}**
-        - Gain journalier moyen : **${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}/jour**
+        - Gain total maintenance : {maintenance_alerts} alertes × ${maintenance_cost}/alerte = ${maintenance_gain_period:,.2f}$
+        - Gain journalier moyen : ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}$/jour
         """)
         st.divider()
 
-        # Section Gain Carburant
         st.markdown("### 4. GAIN CARBURANT (Optimisation des trajets)")
 
         trucks_per_day = min(500, period_summary['avg_daily_operations'] * 0.3)
@@ -857,12 +794,11 @@ def render_financial_module(financial_metrics, period_data):
         - Nombre de jours : {period_summary['total_days']} jours
 
         **Calcul :**
-        - Gain carburant journalier : {trucks_per_day:.0f} × ${fuel_saving} = **${daily_fuel_gain:.2f}/jour**
-        - Gain total carburant : ${daily_fuel_gain:.2f}/jour × {period_summary['total_days']} jours = **${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}**
+        - Gain carburant journalier : {trucks_per_day:.0f} × ${fuel_saving} = ${daily_fuel_gain:.2f}$/jour
+        - Gain total carburant : ${daily_fuel_gain:.2f}/jour × {period_summary['total_days']} jours = ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
         """)
         st.divider()
 
-        # Synthèse finale
         st.markdown("### 📊 SYNTHÈSE FINANCIÈRE")
         st.markdown(f"""
         **Gains totaux sur la période :**
@@ -882,7 +818,7 @@ def render_financial_module(financial_metrics, period_data):
         **Total gains journaliers :** **${financial_metrics.daily_gains:,.2f}/jour**
 
         **Projection mensuelle ({st.session_state.working_days} jours) :**
-        - **${financial_metrics.daily_gains:,.2f}/jour × {st.session_state.working_days} jours = ${financial_metrics.monthly_projection:,.2f}**
+        - ${financial_metrics.daily_gains:,.2f}$/jour × {st.session_state.working_days} jours = ${financial_metrics.monthly_projection:,.2f}$
 
         **Votre commission :**
         - Fixe mensuel : **${st.session_state.monthly_fixed:,.2f}**
@@ -892,7 +828,6 @@ def render_financial_module(financial_metrics, period_data):
 
 
 def render_footer(financial_metrics, period_name):
-    """Affiche le footer."""
     st.markdown("---")
     st.markdown(f"""
     <div style="text-align: center; color: #6B7280; padding: 20px; font-size: 0.9rem;">
