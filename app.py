@@ -735,14 +735,14 @@ def render_financial_module(financial_metrics, period_data):
         **Paramètres :**
         - Durée de référence : {baseline_duration} minutes
         - Durée moyenne période : {avg_duration:.1f} minutes
-        - Coût horaire moyen : ${hourly_cost}/heure
+        - Coût horaire moyen : ${hourly_cost}$/heure
         - Total opérations période : {total_ops:,} opérations
 
         **Calcul :**
         - Économie par opération : {time_saved_minutes:.1f} minutes = {time_saved_hours:.3f} heures
-        - Gain par opération : {time_saved_hours:.3f} h × ${hourly_cost}/h = **${gain_per_op:.2f}**
-        - Gain total temps : {total_ops:,} opérations × ${gain_per_op:.2f} = **${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}**
-        - Gain journalier moyen : **${financial_metrics.breakdown.get('time_gain', 0):,.2f}/jour**
+        - Gain par opération : {time_saved_hours:.3f} h × ${hourly_cost}/h = ${gain_per_op:.2f}$
+        - Gain total temps : {total_ops:,} opérations × ${gain_per_op:.2f} = ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
+        - Gain journalier moyen : ${financial_metrics.breakdown.get('time_gain', 0):,.2f}$/jour
         """)
         st.divider()
 
@@ -763,9 +763,9 @@ def render_financial_module(financial_metrics, period_data):
         - Total opérations période : {total_ops:,} opérations
 
         **Calcul :**
-        - Erreurs évitées : ({baseline_error_rate:.1f}% - {current_error_rate:.1f}%) × {total_ops:,} = **{errors_avoided:.1f}** erreurs
-        - Gain total erreurs : {errors_avoided:.1f} erreurs × ${error_cost} = **${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}**
-        - Gain journalier moyen : **${financial_metrics.breakdown.get('error_gain', 0):,.2f}/jour**
+        - Erreurs évitées : ({baseline_error_rate:.1f}% - {current_error_rate:.1f}%) × {total_ops:,} = ${errors_avoided:.1f}$ erreurs
+        - Gain total erreurs : {errors_avoided:.1f} erreurs × ${error_cost} = ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
+        - Gain journalier moyen : ${financial_metrics.breakdown.get('error_gain', 0):,.2f}$/jour
         """)
         st.divider()
 
@@ -782,8 +782,8 @@ def render_financial_module(financial_metrics, period_data):
         - Gain total maintenance période : ${maintenance_gain_period:,.2f}
 
         **Calcul :**
-        - Gain total maintenance : {maintenance_alerts} alertes × ${maintenance_cost}/alerte = **${maintenance_gain_period:,.2f}**
-        - Gain journalier moyen : **${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}/jour**
+        - Gain total maintenance : {maintenance_alerts} alertes × ${maintenance_cost}/alerte = ${maintenance_gain_period:,.2f}$
+        - Gain journalier moyen : ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}$/jour
         """)
         st.divider()
 
@@ -803,7 +803,7 @@ def render_financial_module(financial_metrics, period_data):
 
         **Calcul :**
         - Gain carburant journalier : {trucks_per_day:.0f} × ${fuel_saving} = ${daily_fuel_gain:.2f}$/jour
-        - Gain total carburant : ${daily_fuel_gain:.2f}/jour × {period_summary['total_days']} jours = ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
+        - Gain total carburant : ${daily_fuel_gain:.2f}$/jour × {period_summary['total_days']} jours = ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
         """)
         st.divider()
 
