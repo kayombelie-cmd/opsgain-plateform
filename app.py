@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timedelta
 from streamlit_folium import st_folium
 from src.utils.i18n import i18n
-
+from src.config import USE_REAL_DATA
 # Import des modules refactorés
 from src.auth import Authentication
 from src.config import APP_NAME, APP_VERSION, PUBLIC_DATA_HASH, PERIODS, COLORS, USE_REAL_DATA
