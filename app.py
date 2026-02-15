@@ -284,7 +284,7 @@ def render_info_section():
     st.markdown("#### 📊 **INFORMATIONS**")
     st.markdown(f"**OpsGain Plateform Version:** {APP_VERSION}")
     # Indicateur de source de données
-    st.markdown(mode_donnees = "📁 Données réelles" if USE_REAL_DATA else "🧪 Données simulées")
+    mode_donnees = "📁 Données réelles" if USE_REAL_DATA else "🧪 Données simulées"
     st.markdown("**Statut:** Données synchronisées")
     st.markdown(f"**Hash des données:** `{PUBLIC_DATA_HASH}`")
     st.markdown("**Développeur:** ELIE KAYOMB MBUMB")
