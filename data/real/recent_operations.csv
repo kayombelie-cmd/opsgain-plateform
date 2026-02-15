@@ -1,0 +1,4 @@
+timestamp,type_operation,zone,engin,duree_minutes,urgence,erreur
+2026-01-03 14:23:00,CHARGEMENT,QUAI_1,TRACTEUR_01,23,0,0
+2026-01-03 14:35:00,DÉCHARGEMENT,QUAI_2_ROUTIER,CHARIOT_01,18,0,0
+...

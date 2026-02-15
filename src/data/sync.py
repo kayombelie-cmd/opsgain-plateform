@@ -6,6 +6,8 @@ import urllib.parse
 import uuid
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
+from pathlib import Path  # Ajout pour le chemin du repository
+
 import streamlit as st
 
 from ..config import PUBLIC_DATA_HASH, DEFAULT_BASE_URL
@@ -17,8 +19,20 @@ from .models import PeriodData
 class DataSynchronizer:
     """Gère la synchronisation et le partage des données."""
     
-    def __init__(self):
-        self.generator = DataGenerator()
+    def __init__(self, use_real_data: bool = False):
+        """
+        Initialise le synchroniseur.
+        
+        Args:
+            use_real_data: Si True, utilise les données réelles depuis le repository.
+                          Sinon, utilise le générateur de données mockées.
+        """
+        self.generator = DataGenerator()  # toujours disponible pour le mode mock
+        if use_real_data:
+            from .repository import FileDataRepository
+            self.data_repo = FileDataRepository(Path('data/real'))
+        else:
+            self.data_repo = None
     
     def load_period_data(self) -> PeriodData:
         """
@@ -76,14 +90,16 @@ class DataSynchronizer:
             st.session_state.selected_period = period_data.get('name', 
                 f"{start_date.strftime('%d/%m/%Y')} au {end_date.strftime('%d/%m/%Y')}")
             
-            # Générer les données synchronisées
-            return self.generator.create_period_data(
-                start_date, end_date, use_current_time=False
-            )
+            # Générer les données synchronisées (réelles ou mock selon le mode)
+            if self.data_repo:
+                return self.data_repo.get_period_data(start_date, end_date)
+            else:
+                return self.generator.create_period_data(
+                    start_date, end_date, use_current_time=False
+                )
             
         except Exception as e:
-            # Ne pas afficher l'erreur en production pour éviter les fuites de données
-            # st.error(f"Erreur lors du chargement des paramètres URL: {e}")
+            # Ne pas afficher l'erreur en production
             return None
     
     def _load_from_sidebar(self) -> PeriodData:
@@ -122,10 +138,13 @@ class DataSynchronizer:
         if start_date > end_date:
             start_date = end_date - timedelta(days=30)
         
-        # Générer les données
-        return self.generator.create_period_data(
-            start_date, end_date, use_current_time=True
-        )
+        # Générer les données (réelles ou mock selon le mode)
+        if self.data_repo:
+            return self.data_repo.get_period_data(start_date, end_date)
+        else:
+            return self.generator.create_period_data(
+                start_date, end_date, use_current_time=True
+            )
     
     def generate_shareable_link(
         self, 

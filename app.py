@@ -9,13 +9,14 @@ from src.utils.i18n import i18n
 
 # Import des modules refactorés
 from src.auth import Authentication
-from src.config import APP_NAME, APP_VERSION, PUBLIC_DATA_HASH, PERIODS, COLORS
+from src.config import APP_NAME, APP_VERSION, PUBLIC_DATA_HASH, PERIODS, COLORS, USE_REAL_DATA
 from src.utils.logger import setup_logger
 from src.data.sync import DataSynchronizer
 from src.finance.calculator import FinancialCalculator
 from src.visualization.components import UIComponents
 from src.visualization.charts import ChartGenerator
 from src.visualization.maps import MapGenerator
+from src.utils.exports import generate_excel_report  # Nouvel import
 
 # Configuration
 logger = setup_logger(__name__)
@@ -38,7 +39,8 @@ def main():
 
     st.markdown(UIComponents.style_css(), unsafe_allow_html=True)
 
-    data_sync = DataSynchronizer()
+    # Initialisation des services avec le mode de données (réelles ou simulées)
+    data_sync = DataSynchronizer(use_real_data=USE_REAL_DATA)
     finance_calc = FinancialCalculator(st.session_state)
     chart_gen = ChartGenerator()
     map_gen = MapGenerator()
@@ -391,7 +393,7 @@ def render_performance_analysis(period_data, chart_gen):
                 period_data.daily_data,
                 period_data.period_name
             )
-            st.plotly_chart(fig1, use_container_width=True)  # CORRIGÉ
+            st.plotly_chart(fig1, use_container_width=True)
         else:
             UIComponents.render_alert("Aucune donnée disponible", "warning")
 
@@ -399,7 +401,7 @@ def render_performance_analysis(period_data, chart_gen):
         st.markdown("#### 🕒 Distribution Horaire")
         if not period_data.hourly_data.empty:
             fig2 = chart_gen.create_hourly_distribution_chart(period_data.hourly_data)
-            st.plotly_chart(fig2, use_container_width=True)  # CORRIGÉ
+            st.plotly_chart(fig2, use_container_width=True)
         else:
             UIComponents.render_alert("Aucune donnée horaire disponible", "warning")
 
@@ -412,7 +414,7 @@ def render_equipment_performance(period_data, chart_gen):
     with col1:
         if not period_data.engins_data.empty:
             fig3 = chart_gen.create_engins_performance_chart(period_data.engins_data)
-            st.plotly_chart(fig3, use_container_width=True)  # CORRIGÉ
+            st.plotly_chart(fig3, use_container_width=True)
         else:
             UIComponents.render_alert("Aucune donnée d'équipement disponible", "warning")
 
@@ -638,7 +640,7 @@ def render_financial_module(financial_metrics, period_data):
         st.markdown("#### 📈 RÉPARTITION DES GAINS (MOYENNE JOURNALIÈRE)")
         chart_gen = ChartGenerator()
         fig_fin = chart_gen.create_financial_pie_chart(financial_metrics.breakdown)
-        st.plotly_chart(fig_fin, use_container_width=True)  # CORRIGÉ
+        st.plotly_chart(fig_fin, use_container_width=True)
 
     with col_resume:
         st.markdown("#### 📝 RÉCAPITULATIF CONTRAT")
@@ -687,13 +689,19 @@ def render_financial_module(financial_metrics, period_data):
         **Hash des données :** `{PUBLIC_DATA_HASH}`
         """)
 
-        col_btn1, col_btn2 = st.columns(2)
-        with col_btn1:
-            if st.button("📤 Exporter rapport", type="secondary"):
-                with st.spinner("Génération..."):
-                    time.sleep(1)
-                    st.success("✅ Rapport généré")
-        with col_btn2:
+        # Nouvelle section EXPORT
+        st.markdown("#### 📥 EXPORT")
+        col_exp1, col_exp2 = st.columns(2)
+        with col_exp1:
+            if st.button("📊 Exporter Excel", type="secondary"):
+                excel_data = generate_excel_report(period_data, financial_metrics)
+                st.download_button(
+                    label="Télécharger le rapport Excel",
+                    data=excel_data,
+                    file_name=f"rapport_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+        with col_exp2:
             if st.button("🔄 Actualiser", type="primary"):
                 st.rerun()
 
@@ -732,9 +740,9 @@ def render_financial_module(financial_metrics, period_data):
 
         **Calcul :**
         - Économie par opération : {time_saved_minutes:.1f} minutes = {time_saved_hours:.3f} heures
-        - Gain par opération : {time_saved_hours:.3f} h × ${hourly_cost}/h = ${gain_per_op:.2f}$
-        - Gain total temps : {total_ops:,} opérations × ${gain_per_op:.2f} = ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
-        - Gain journalier moyen : ${financial_metrics.breakdown.get('time_gain', 0):,.2f}$/jour
+        - Gain par opération : {time_saved_hours:.3f} h × ${hourly_cost}/h = **${gain_per_op:.2f}**
+        - Gain total temps : {total_ops:,} opérations × ${gain_per_op:.2f} = **${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}**
+        - Gain journalier moyen : **${financial_metrics.breakdown.get('time_gain', 0):,.2f}/jour**
         """)
         st.divider()
 
@@ -756,8 +764,8 @@ def render_financial_module(financial_metrics, period_data):
 
         **Calcul :**
         - Erreurs évitées : ({baseline_error_rate:.1f}% - {current_error_rate:.1f}%) × {total_ops:,} = **{errors_avoided:.1f}** erreurs
-        - Gain total erreurs : {errors_avoided:.1f} erreurs × ${error_cost} = ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
-        - Gain journalier moyen : ${financial_metrics.breakdown.get('error_gain', 0):,.2f}/jour
+        - Gain total erreurs : {errors_avoided:.1f} erreurs × ${error_cost} = **${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}**
+        - Gain journalier moyen : **${financial_metrics.breakdown.get('error_gain', 0):,.2f}/jour**
         """)
         st.divider()
 
@@ -774,8 +782,8 @@ def render_financial_module(financial_metrics, period_data):
         - Gain total maintenance période : ${maintenance_gain_period:,.2f}
 
         **Calcul :**
-        - Gain total maintenance : {maintenance_alerts} alertes × ${maintenance_cost}/alerte = ${maintenance_gain_period:,.2f}$
-        - Gain journalier moyen : ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}$/jour
+        - Gain total maintenance : {maintenance_alerts} alertes × ${maintenance_cost}/alerte = **${maintenance_gain_period:,.2f}**
+        - Gain journalier moyen : **${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}/jour**
         """)
         st.divider()
 
@@ -790,7 +798,7 @@ def render_financial_module(financial_metrics, period_data):
         st.markdown(f"""
         **Paramètres :**
         - Camions par jour : {trucks_per_day:.0f} camions
-        - Économie par camion : ${fuel_saving}/jour
+        - Économie par camion : ${fuel_saving}$/jour
         - Nombre de jours : {period_summary['total_days']} jours
 
         **Calcul :**
@@ -802,28 +810,28 @@ def render_financial_module(financial_metrics, period_data):
         st.markdown("### 📊 SYNTHÈSE FINANCIÈRE")
         st.markdown(f"""
         **Gains totaux sur la période :**
-        - Gain temps : **${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}**
-        - Gain erreurs : **${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}**
-        - Gain maintenance : **${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}**
-        - Gain carburant : **${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}**
+        - Gain temps : ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
+        - Gain erreurs : ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
+        - Gain maintenance : ${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}$
+        - Gain carburant : ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
 
         **Total gains période :** **${financial_metrics.period_gains:,.2f}**
 
         **Moyennes journalières :**
-        - Gain temps : **${financial_metrics.breakdown.get('time_gain', 0):,.2f}/jour**
-        - Gain erreurs : **${financial_metrics.breakdown.get('error_gain', 0):,.2f}/jour**
-        - Gain maintenance : **${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}/jour**
-        - Gain carburant : **${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}/jour**
+        - Gain temps : ${financial_metrics.breakdown.get('time_gain', 0):,.2f}$/jour
+        - Gain erreurs : ${financial_metrics.breakdown.get('error_gain', 0):,.2f}$/jour
+        - Gain maintenance : ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}$/jour
+        - Gain carburant : ${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}$/jour
 
-        **Total gains journaliers :** **${financial_metrics.daily_gains:,.2f}/jour**
+        **Total gains journaliers :${financial_metrics.daily_gains:,.2f}$/jour
 
-        **Projection mensuelle ({st.session_state.working_days} jours) :**
+        **Projection mensuelle ({st.session_state.working_days} jours) :
         - ${financial_metrics.daily_gains:,.2f}$/jour × {st.session_state.working_days} jours = ${financial_metrics.monthly_projection:,.2f}$
 
         **Votre commission :**
-        - Fixe mensuel : **${st.session_state.monthly_fixed:,.2f}**
-        - Variable ({st.session_state.commission_rate*100}%) : **${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}**
-        - Commission totale : **${financial_metrics.your_commission_monthly:,.2f}**
+        - Fixe mensuel : ${st.session_state.monthly_fixed:,.2f}$
+        - Variable ({st.session_state.commission_rate*100}%) : ${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}$
+        - Commission totale : ${financial_metrics.your_commission_monthly:,.2f}$
         """)
 
 
