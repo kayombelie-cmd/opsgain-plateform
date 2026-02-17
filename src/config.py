@@ -72,7 +72,7 @@ COLORS = {
 APP_VERSION = "3.0.0"
 APP_NAME = "OPSGAIN PLATEFORM/PORT INTELLIGENT"
 APP_DESCRIPTION = "La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel"
-USE_REAL_DATA = True  # ou True si vous utilisez des données réelles
+USE_REAL_DATA = False  # ou True si vous utilisez des données réelles
 
 # URLs
 DEFAULT_BASE_URL = "https://opsgain-plateform-kyrqqc6ibx2um8cbnqo5bg.streamlit.app"
