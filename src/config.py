@@ -21,7 +21,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 # Configuration des données
 PUBLIC_DATA_HASH = "portsec_2026_v1"
 DATA_SEED = 42
-DEFAULT_PASSWORD = os.getenv("APP_PASSWORD", "FROMelie-1756")  # valeur par défaut pour le développement local
+DEFAULT_PASSWORD = os.getenv("APP_PASSWORD")  # valeur par défaut pour le développement local
 
 # Périodes par défaut
 PERIODS = {
