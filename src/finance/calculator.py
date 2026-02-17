@@ -15,11 +15,35 @@ class FinancialCalculator:
     
     def __init__(self, session_state):
         self.session_state = session_state
-    
+   
     def _get_param(self, key: str, default=None):
         """Récupère un paramètre financier."""
         return getattr(self.session_state, key, FINANCIAL_PARAMS.get(key, default))
-    
+    def _empty_metrics(self, period_name: str) -> FinancialMetrics:
+        """Retourne des métriques vides quand aucune donnée."""
+        empty_summary = {
+            'selected_period': period_name,
+            'start_date': '',
+            'end_date': '',
+            'total_days': 0,
+            'total_operations': 0,
+            'avg_daily_operations': 0,
+            'avg_duration': 0,
+            'total_errors': 0,
+            'error_rate': 0,
+            'period_gains': 0
+        }
+        return FinancialMetrics(
+            daily_gains=0,
+            monthly_projection=0,
+            period_gains=0,
+            your_commission_today=0,
+            your_commission_monthly=0,
+            breakdown={},
+            transaction_hash='',
+            period_summary=empty_summary,
+            metrics={}
+        )
     def calculate(self, period_data: PeriodData) -> FinancialMetrics:
         """Calcule toutes les métriques financières."""
         if period_data.is_empty():
