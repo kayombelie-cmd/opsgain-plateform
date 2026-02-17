@@ -9,6 +9,7 @@ from src.utils.i18n import i18n
 from src.config import USE_REAL_DATA
 # Import des modules refactorés
 from src.auth import Authentication
+from src.config import USE_REAL_DATA
 from src.config import APP_NAME, APP_VERSION, PUBLIC_DATA_HASH, PERIODS, COLORS, USE_REAL_DATA
 from src.utils.logger import setup_logger
 from src.data.sync import DataSynchronizer

@@ -6,4 +6,5 @@ folium==0.15.1
 streamlit-folium==0.18.0
 python-dotenv==1.0.0
 pytest==7.4.0
-pillow==10.2.0
+pillow==10.2.0python-dotenv==1.0.0
+openpyxl==3.1.2
