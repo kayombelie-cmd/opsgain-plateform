@@ -60,7 +60,6 @@ def main():
     print("🎯 LANCEMENT DE L'APPLICATION")
     print("=" * 60)
     print("\n📊 Application disponible sur: http://localhost:8501")
-    print("🔑 Mot de passe par défaut: FROMelie-1756")
     print("🔄 Pour arrêter: Ctrl+C")
     print("\n" + "=" * 60)
     
