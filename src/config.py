@@ -76,5 +76,3 @@ USE_REAL_DATA = True  # ou True si vous utilisez des données réelles
 
 # URLs
 DEFAULT_BASE_URL = "https://opsgain-plateform-kyrqqc6ibx2um8cbnqo5bg.streamlit.app"
-# Mode données réelles ou mockées
-USE_REAL_DATA = os.getenv("USE_REAL_DATA", "False").lower() == "true"
