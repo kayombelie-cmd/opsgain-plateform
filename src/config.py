@@ -7,6 +7,9 @@ import os
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
+# Charge le fichier .env situé à la racine du projet
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 # Chemins
 BASE_DIR = Path(__file__).parent.parent
 ASSETS_DIR = BASE_DIR / "assets"

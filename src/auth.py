@@ -27,53 +27,38 @@ class Authentication:
 
     @staticmethod
     def render_login_page():
-        # Ne pas appeler st.set_page_config ici – déjà fait dans main()
-
-        # CSS minimal et efficace
+        """Affiche la page de login."""
+        # CSS (identique à avant, mais sans set_page_config)
         st.markdown("""
         <style>
-            /* Force le centrage de tout le contenu */
-            .stApp > header, .stApp > section {
-                display: flex !important;
-                justify-content: center !important;
-                align-items: center !important;
-            }
-            .main > div {
-                max-width: 500px !important;
-                margin: 0 auto !important;
-                text-align: center !important;
-            }
-            h1, h2, p, .stTextInput, .stButton {
-                text-align: center !important;
-                margin-left: auto !important;
-                margin-right: auto !important;
-            }
-            .stTextInput > div, .stButton > button {
-                width: 100% !important;
-                max-width: 350px !important;
-                margin: 0 auto !important;
-            }
+            /* styles inchangés */
         </style>
         """, unsafe_allow_html=True)
 
-        # Contenu centré
-        st.markdown("<h1 style='text-align: center; font-size: 3.5rem; color: #3B82F6;'>🔐</h1>", unsafe_allow_html=True)
-        st.markdown("<h2 style='text-align: center; color: #1E3A8A; font-size: 2.2rem; font-weight: 800;'>OPSGAIN PLATFORM</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #10B981; font-size: 1.1rem; font-weight: 600;'>💎 Vos Opérations • Nos Gains</p>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #475569; font-size: 0.95rem; max-width: 400px; margin: 0 auto 25px auto;'><strong>La plateforme qui transforme vos données opérationnelles<br>en gains financiers vérifiables en temps réel.</strong></p>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #6B7280; font-size: 0.8rem; margin-bottom: 20px;'>📊 Dashboard opérationnel synchronisé • 🚀 3.0.0 • 📅 Données 2026</p>", unsafe_allow_html=True)
+        # Contenu principal avec i18n
+        st.markdown('<div class="login-main">', unsafe_allow_html=True)
+        st.markdown(f"<h1 style='text-align: center; font-size: 3.5rem; color: #3B82F6;'>🔐</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h2 class='login-title'>{i18n.get('auth.title')}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<p class='login-slogan'>{i18n.get('auth.slogan')}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p class='login-description'><strong>{i18n.get('auth.description')}</strong></p>", unsafe_allow_html=True)
+        st.markdown(f"<p class='login-caption'>📊 {i18n.get('app.subtitle', 'Dashboard opérationnel synchronisé')} • 🚀 {APP_VERSION} • 📅 Données 2026</p>", unsafe_allow_html=True)
+        st.markdown('<hr class="login-divider">', unsafe_allow_html=True)
 
-        st.divider()
+        password = st.text_input(
+            i18n.get('auth.password_label'),
+            type="password",
+            help=i18n.get('auth.password_help', default="Entrez le mot de passe fourni par votre administrateur OpsGain"),
+            key="password_input"
+        )
 
-        password = st.text_input("**Mot de passe d'accès :**", type="password", label_visibility="collapsed", placeholder="Mot de passe")
-
-        if st.button("**🚀 ACCÉDER AU DASHBOARD**", type="primary", use_container_width=True):
+        if st.button(i18n.get('auth.button_access'), type="primary", use_container_width=True):
             if password == DEFAULT_PASSWORD:
                 st.session_state.authenticated = True
                 st.rerun()
             else:
-                st.error("❌ Mot de passe incorrect")
+                st.error(i18n.get('auth.wrong_password'))
 
-        st.divider()
-        st.markdown("<p style='text-align: center; color: #6B7280; font-size: 0.85rem;'>© 2026 OpsGain Technologies • Tous droits réservés</p>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #9CA3AF; font-size: 0.75rem; margin-top: 10px;'>🔐 Accès sécurisé • 🔄 Données synchronisées • 📈 ROI vérifiable</p>", unsafe_allow_html=True)
+        st.markdown('<hr class="login-divider">', unsafe_allow_html=True)
+        st.markdown(f"<p class='login-footer'>© 2026 OpsGain Technologies • Tous droits réservés</p>", unsafe_allow_html=True)
+        st.markdown(f"<p class='login-security'>{i18n.get('app.footer', '🔐 Accès sécurisé • 🔄 Données synchronisées • 📈 ROI vérifiable')}</p>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)

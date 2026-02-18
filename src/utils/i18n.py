@@ -32,23 +32,17 @@ class I18n:
             self.load_language(lang_code)
         self.current_lang = lang_code
     
-    def get(self, key, default=None):
-        """Récupère une traduction par clé."""
+    def get(self, key, default=None, **kwargs):
         try:
-            # Navigation dans la structure JSON : "app.title"
             keys = key.split('.')
             value = self.translations[self.current_lang]
-            
             for k in keys:
                 value = value[k]
-            
+            if kwargs:
+                value = value.format(**kwargs)
             return value
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, AttributeError):
             return default if default else key
-    
-    def t(self, key, default=None):
-        """Alias pour get()."""
-        return self.get(key, default)
 
 
 # Instance globale

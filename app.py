@@ -66,107 +66,122 @@ def main():
 
 def render_sidebar(data_sync):
     with st.sidebar:
-        st.markdown(f"### 🎯 **{APP_NAME}**")
+        st.markdown(f"### 🎯 **{i18n.get('sidebar.title')}**")
         st.markdown("---")
-
-        if st.button("🚀 **Lancer la démonstration complète**", type="primary"):
+        
+        if st.button(i18n.get('sidebar.demo_button'), type="primary", use_container_width=True):
             st.session_state.demo_launched = True
             st.rerun()
-
+        
         st.markdown("---")
-        st.markdown("### 📅 **PÉRIODE D'ANALYSE**")
-
+        st.markdown(f"### {i18n.get('sidebar.period_analysis')}")
+        
         default_end = datetime.now()
         default_start = default_end - timedelta(days=30)
-
-        period_option = st.selectbox(
-            "Sélectionner la période",
-            options=list(PERIODS.keys())
+        
+        # Liste des options de période traduites
+        period_options = [
+            i18n.get('periods.last_7_days'),
+            i18n.get('periods.last_30_days'),
+            i18n.get('periods.last_90_days'),
+            i18n.get('periods.custom')
+        ]
+        
+        # Sélecteur de période
+        selected_period_text = st.selectbox(
+            i18n.get('sidebar.select_period'),
+            options=period_options,
+            key="period_select"
         )
-
-        handle_period_selection(period_option, default_start, default_end)
+        
+        # Mapper le texte sélectionné à une clé interne
+        if selected_period_text == i18n.get('periods.last_7_days'):
+            period_key = "7d"
+        elif selected_period_text == i18n.get('periods.last_30_days'):
+            period_key = "30d"
+        elif selected_period_text == i18n.get('periods.last_90_days'):
+            period_key = "90d"
+        else:
+            period_key = "custom"
+        
+        # Appeler la fonction de gestion des dates avec la clé
+        handle_period_selection(period_key, default_start, default_end)
+        
+        # Filtres
         render_filters()
-
+        
+        # Sélecteur de langue
         st.markdown("---")
-        st.markdown("### 🌍 **LANGUE**")
-
+        st.markdown(f"### {i18n.get('sidebar.language')}")
         language = st.selectbox(
-            "Sélectionner la langue",
+            "",
             options=["fr", "en"],
             format_func=lambda x: "🇫🇷 Français" if x == "fr" else "🇬🇧 English",
-            key="language_select"
+            key="language_select",
+            label_visibility="collapsed"
         )
-
         if language != st.session_state.language:
             st.session_state.language = language
             i18n.set_language(language)
             st.rerun()
-
+        
+        # Paramètres financiers, synchronisation, infos...
         render_financial_params()
         render_sync_section(data_sync)
         render_info_section()
-
-
-def handle_period_selection(period_option, default_start, default_end):
-    if period_option == "Personnalisée":
-        col1, col2 = st.columns(2)
-        with col1:
-            start_date_input = st.date_input("Date début", value=default_start)
-        with col2:
-            end_date_input = st.date_input("Date fin", value=default_end)
-
-        st.session_state.start_date = datetime.combine(start_date_input, datetime.min.time())
-        st.session_state.end_date = datetime.combine(end_date_input, datetime.max.time())
-        st.session_state.selected_period = f"{start_date_input.strftime('%d/%m/%Y')} au {end_date_input.strftime('%d/%m/%Y')}"
-    else:
-        days = PERIODS[period_option]
+        
+def handle_period_selection(period_key, default_start, default_end):
+    if period_key == "custom":
+# ... afficher les date_input
+        if period_key == "7d":
+            days = 7
+        elif period_key == "30d":
+            days = 30
+        elif period_key == "90d":
+            days = 90
+        else:
+            days = 30  # fallback
         start_date = default_end - timedelta(days=days)
         st.session_state.start_date = start_date
         st.session_state.end_date = default_end
-        st.session_state.selected_period = f"{start_date.strftime('%d/%m/%Y')} au {default_end.strftime('%d/%m/%Y')}"
-
+        st.session_state.selected_period = i18n.get(f'periods.last_{days}_days')
 
 def render_filters():
     st.markdown("---")
-    st.markdown("### 🔧 **FILTRES**")
-
-    st.checkbox("Afficher les erreurs", value=True, key="show_errors")
-    st.checkbox("Afficher les alertes", value=True, key="show_alerts")
-    auto_refresh = st.checkbox("🔄 Actualisation automatique", value=False, key="auto_refresh")
-
+    st.markdown(f"### {i18n.get('sidebar.filters')}")
+    
+    st.checkbox(i18n.get('sidebar.show_errors'), value=True, key="show_errors")
+    st.checkbox(i18n.get('sidebar.show_alerts'), value=True, key="show_alerts")
+    auto_refresh = st.checkbox(i18n.get('sidebar.auto_refresh'), value=False, key="auto_refresh")
+    
     if auto_refresh:
-        refresh_rate = st.slider("Intervalle (secondes)", 5, 60, 30, key="refresh_rate")
-        st.info(f"Prochain rafraîchissement dans {refresh_rate}s")
+        refresh_rate = st.slider(i18n.get('sidebar.refresh_interval'), 5, 60, 30, key="refresh_rate")
+        st.info(i18n.get('sidebar.next_refresh', seconds=refresh_rate))
         st.session_state.auto_refresh = True
         st.session_state.refresh_rate = refresh_rate
 
 
 def render_financial_params():
     st.markdown("---")
-    st.markdown("### 💰 **PARAMÈTRES FINANCIERS**")
-
+    st.markdown(f"### {i18n.get('sidebar.financial_params')}")
+    
     init_financial_params()
-
+    
     col1, col2 = st.columns(2)
     with col1:
         monthly_fixed = st.number_input(
-            "Fixé mensuel ($)",
-            min_value=0,
-            max_value=20000,
+            i18n.get('sidebar.monthly_fixed'),
+            min_value=0, max_value=20000,
             value=st.session_state.monthly_fixed,
-            step=500,
-            key="monthly_fixed_input"
+            step=500, key="monthly_fixed_input"
         )
         st.session_state.monthly_fixed = monthly_fixed
-
     with col2:
         commission_input = st.number_input(
-            "Commission (%)",
-            min_value=0.0,
-            max_value=50.0,
+            i18n.get('sidebar.commission_rate'),
+            min_value=0.0, max_value=50.0,
             value=st.session_state.commission_rate * 100,
-            step=0.5,
-            key="commission_rate_input"
+            step=0.5, key="commission_rate_input"
         )
         st.session_state.commission_rate = commission_input / 100
 
@@ -238,59 +253,36 @@ def init_financial_params():
 
 def render_sync_section(data_sync):
     st.markdown("---")
-    st.markdown("### 🔗 **PARTAGE DE DONNÉES SYNCHRONISÉES**")
-
-    st.info(f"""
-    **Hash des données :** `{PUBLIC_DATA_HASH}`
-
-    **Pour partager les mêmes données :**
-    1. Configurez la période ci-dessus
-    2. Générez le lien de partage
-    3. Envoyez-le à vos collaborateurs
-    """)
-
-    if st.button("🔗 Générer lien de partage", type="secondary"):
-        selected_period = st.session_state.get('selected_period', '30 derniers jours')
+    st.markdown(f"### {i18n.get('sidebar.data_sync')}")
+    
+    st.info(i18n.get('sidebar.sync_info', hash=PUBLIC_DATA_HASH))
+    
+    if st.button(i18n.get('sidebar.generate_link'), width='stretch', type="secondary"):
+        selected_period = st.session_state.get('selected_period', i18n.get('periods.last_30_days'))
         start_date = st.session_state.get('start_date', datetime.now() - timedelta(days=30))
         end_date = st.session_state.get('end_date', datetime.now())
-
-        share_url, link_id = data_sync.generate_shareable_link(
-            selected_period, start_date, end_date
-        )
-
-        st.success(f"✅ Lien généré ! ID de suivi: {link_id}")
+        
+        share_url, link_id = data_sync.generate_shareable_link(selected_period, start_date, end_date)
+        
+        st.success(i18n.get('sidebar.link_success', id=link_id))
         st.code(share_url, language="text")
-
+        
         st.markdown(f"""
         <a href="{share_url}" target="_blank">
-            <button style="
-                background: {COLORS['secondary']}; 
-                color: white; 
-                border: none; 
-                padding: 10px 20px; 
-                border-radius: 5px; 
-                cursor: pointer; 
-                width: 100%; 
-                margin-top: 10px;
-                font-weight: 600;
-            ">
-                🌐 Ouvrir dans un nouvel onglet
+            <button style="background: {COLORS['secondary']}; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: 600;">
+                {i18n.get('sidebar.open_link')}
             </button>
         </a>
         """, unsafe_allow_html=True)
 
-
 def render_info_section():
     st.markdown("---")
-    st.markdown("#### 📊 **INFORMATIONS**")
-    st.markdown(f"**OpsGain Plateform Version:** {APP_VERSION}")
-    # Indicateur de source de données
-    mode_donnees = "📁 Données réelles" if USE_REAL_DATA else "🧪 Données simulées"
-    st.markdown(f"**Source:** {mode_donnees}") 
-    st.markdown("**Statut:** Données synchronisées")
-    st.markdown(f"**Hash des données:** `{PUBLIC_DATA_HASH}`")
-    st.markdown("**Développeur:** ELIE KAYOMB MBUMB")
-    st.markdown("**Accès sécurisé:** ✅ Authentifié")
+    st.markdown(f"#### {i18n.get('sidebar.info')}")
+    st.markdown(i18n.get('sidebar.version', version=APP_VERSION))
+    st.markdown(i18n.get('sidebar.status'))
+    st.markdown(i18n.get('sidebar.data_hash', hash=PUBLIC_DATA_HASH))
+    st.markdown(i18n.get('sidebar.developer'))
+    st.markdown(i18n.get('sidebar.access_status'))
 
 
 def render_header(period_name):
@@ -337,179 +329,147 @@ def render_header(period_name):
 
 
 def render_operational_summary(period_data, financial_metrics):
-    st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.operational_summary", "📊 SYNTHÈSE OPÉRATIONNELLE")}</h2>', unsafe_allow_html=True)
-
+    st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.operational_summary")}</h2>', unsafe_allow_html=True)
+    
     col1, col2, col3, col4 = st.columns(4)
-
     with col1:
         total_ops = period_data.daily_data['nb_operations'].sum()
         avg_daily_ops = total_ops / len(period_data.daily_data) if len(period_data.daily_data) > 0 else 0
         st.metric(
-            label="📦 Opérations Total",
+            label=i18n.get('dashboard.total_operations'),
             value=f"{total_ops:,}",
-            delta=f"{avg_daily_ops:,.0f}/jour",
+            delta=f"{avg_daily_ops:,.0f}{i18n.get('common.per_day')}",
             help=f"Total sur {len(period_data.daily_data)} jours"
         )
-
     with col2:
         avg_duration = period_data.daily_data['duree_moyenne'].mean()
         prev_duration = avg_duration * 1.05
         delta_pct = ((prev_duration - avg_duration) / prev_duration * 100) if prev_duration > 0 else 0
         st.metric(
-            label="⏱️ Durée Moyenne",
-            value=f"{avg_duration:.1f} min",
+            label=i18n.get('dashboard.avg_duration'),
+            value=f"{avg_duration:.1f} {i18n.get('common.minutes')}",
             delta=f"-{delta_pct:.1f}%" if delta_pct > 0 else None,
             help="Moyenne pondérée par le nombre d'opérations"
         )
-
     with col3:
         total_errors = period_data.daily_data['erreurs'].sum()
         total_ops = period_data.daily_data['nb_operations'].sum()
         error_rate = (total_errors / total_ops * 100) if total_ops > 0 else 0
         st.metric(
-            label="❌ Taux d'Erreur",
+            label=i18n.get('dashboard.error_rate'),
             value=f"{error_rate:.1f}%",
-            delta=f"{total_errors} erreurs",
+            delta=f"{total_errors} {i18n.get('common.errors')}",
             delta_color="normal" if error_rate < 2.5 else "inverse",
             help=f"Total de {total_errors} erreurs sur la période"
         )
-
     with col4:
         st.metric(
-            label="💰 Gains Totaux Période",
+            label=i18n.get('dashboard.total_gains'),
             value=f"${financial_metrics.period_gains:,.0f}",
-            delta=f"${financial_metrics.daily_gains:,.0f}/jour",
+            delta=f"${financial_metrics.daily_gains:,.0f}{i18n.get('common.per_day')}",
             help=f"Gains estimés sur {len(period_data.daily_data)} jours"
         )
-
     st.markdown("---")
 
-
 def render_performance_analysis(period_data, chart_gen):
-    st.markdown('<h2 class="section-title">📈 ANALYSE DES PERFORMANCES</h2>', unsafe_allow_html=True)
-
+    st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.performance_analysis")}</h2>', unsafe_allow_html=True)
+    
     col1, col2 = st.columns(2)
-
     with col1:
-        st.markdown("#### 📊 Activité Journalière")
+        st.markdown(f"#### {i18n.get('dashboard.daily_activity')}")
         if not period_data.daily_data.empty:
-            fig1 = chart_gen.create_daily_activity_chart(
-                period_data.daily_data,
-                period_data.period_name
-            )
+            fig1 = chart_gen.create_daily_activity_chart(period_data.daily_data, period_data.period_name)
             st.plotly_chart(fig1, use_container_width=True)
         else:
-            UIComponents.render_alert("Aucune donnée disponible", "warning")
-
+            UIComponents.render_alert(i18n.get('dashboard.no_data'), "warning")
     with col2:
-        st.markdown("#### 🕒 Distribution Horaire")
+        st.markdown(f"#### {i18n.get('dashboard.hourly_distribution')}")
         if not period_data.hourly_data.empty:
             fig2 = chart_gen.create_hourly_distribution_chart(period_data.hourly_data)
-            st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig2, width='stretch')
         else:
-            UIComponents.render_alert("Aucune donnée horaire disponible", "warning")
+            UIComponents.render_alert(i18n.get('dashboard.no_hourly_data'), "warning")
 
 
 def render_equipment_performance(period_data, chart_gen):
-    st.markdown('<h2 class="section-title">🏗️ PERFORMANCE DES ÉQUIPEMENTS</h2>', unsafe_allow_html=True)
-
+    st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.equipment_performance")}</h2>', unsafe_allow_html=True)
+    
     col1, col2 = st.columns([2, 1])
-
     with col1:
         if not period_data.engins_data.empty:
             fig3 = chart_gen.create_engins_performance_chart(period_data.engins_data)
-            st.plotly_chart(fig3, use_container_width=True)
+            st.plotly_chart(fig3, width='stretch')
         else:
-            UIComponents.render_alert("Aucune donnée d'équipement disponible", "warning")
-
+            UIComponents.render_alert(i18n.get('dashboard.no_data'), "warning")
     with col2:
-        st.markdown("#### ⚠️ Engins à Surveiller")
+        st.markdown(f"#### {i18n.get('dashboard.equipment_to_monitor')}")
         if not period_data.engins_data.empty:
-            period_data.engins_data['taux_erreur'] = (
-                period_data.engins_data['erreurs'] /
-                period_data.engins_data['total_operations'] * 100
-            )
+            period_data.engins_data['taux_erreur'] = (period_data.engins_data['erreurs'] / period_data.engins_data['total_operations'] * 100)
             problem_engins = period_data.engins_data[period_data.engins_data['taux_erreur'] > 1.5]
-
             if not problem_engins.empty:
                 for _, engin in problem_engins.iterrows():
                     error_class = "badge-danger" if engin['taux_erreur'] > 3 else "badge-warning"
                     st.markdown(f"""
                     <div class="metric-card">
                         <strong>{engin['engin']}</strong><br>
-                        <span class="{error_class}">{engin['erreurs']} erreurs ({engin['taux_erreur']:.1f}%)</span><br>
-                        <small>{engin['total_operations']} opérations</small>
+                        <span class="{error_class}">{engin['erreurs']} {i18n.get('common.errors')} ({engin['taux_erreur']:.1f}%)</span><br>
+                        <small>{engin['total_operations']} {i18n.get('common.operations')}</small>
                     </div>
                     """, unsafe_allow_html=True)
             else:
-                UIComponents.render_alert("✅ Tous les engins fonctionnent normalement", "success")
+                UIComponents.render_alert(i18n.get('dashboard.all_equipment_ok'), "success")
         else:
-            UIComponents.render_alert("Aucun engin problématique détecté", "info")
+            UIComponents.render_alert(i18n.get('dashboard.no_problem_equipment'), "info")
 
 
 def render_realtime_map(map_gen):
-    st.markdown('<h2 class="section-title">🗺️ CARTE TEMPS-RÉEL DU PORT</h2>', unsafe_allow_html=True)
-
+    st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.realtime_map")}</h2>', unsafe_allow_html=True)
+    
     col1, col2 = st.columns([3, 1])
-
     with col1:
         port_map = map_gen.create_realtime_map()
         st_folium(port_map, width=800, height=500)
-
     with col2:
-        st.markdown("#### 🔍 FILTRES")
-
-        selected_engins = st.multiselect(
-            "Types d'engins",
-            ["Tracteur", "Chariot", "Grue", "Camion"],
-            default=["Tracteur", "Chariot"],
+        st.markdown(f"#### {i18n.get('dashboard.map_filters')}")
+        st.multiselect(
+            i18n.get('dashboard.equipment_types'),
+            [i18n.get('equipment_types.tractor'), i18n.get('equipment_types.forklift'), i18n.get('equipment_types.crane'), i18n.get('equipment_types.truck')],
+            default=[i18n.get('equipment_types.tractor'), i18n.get('equipment_types.forklift')],
             key="map_engins_filter"
         )
-
-        st.slider("Rafraîchissement (secondes)", 5, 60, 30, key="map_refresh_rate")
-        st.checkbox("Afficher les trajets", value=True, key="show_routes")
-        st.checkbox("Afficher les zones congestion", value=True, key="show_congestion")
-        st.checkbox("Afficher les alertes sur carte", value=True, key="show_alerts_on_map")
-
+        st.slider(i18n.get('dashboard.refresh_map'), 5, 60, 30, key="map_refresh_rate")
+        st.checkbox(i18n.get('dashboard.show_routes'), value=True, key="show_routes")
+        st.checkbox(i18n.get('dashboard.show_congestion'), value=True, key="show_congestion")
+        st.checkbox(i18n.get('dashboard.show_alerts_on_map'), value=True, key="show_alerts_on_map")
+        
         st.markdown("---")
-        st.markdown("#### 🎯 LÉGENDE")
-        st.markdown("🔵 **Quai Principal**")
-        st.markdown("🟢 **Quai Routier**")
-        st.markdown("🟠 **Zone Stockage**")
-        st.markdown("🔴 **Contrôle Douane**")
-        st.markdown("⚫ **Maintenance**")
-
+        st.markdown(f"#### {i18n.get('dashboard.legend')}")
+        st.markdown(i18n.get('dashboard.legend_main_quay'))
+        st.markdown(i18n.get('dashboard.legend_road_quay'))
+        st.markdown(i18n.get('dashboard.legend_storage'))
+        st.markdown(i18n.get('dashboard.legend_customs'))
+        st.markdown(i18n.get('dashboard.legend_maintenance'))
 
 def render_alerts_and_activity(period_data):
-    st.markdown('<h2 class="section-title">🚨 ALERTES ET ACTIVITÉ EN TEMPS RÉEL</h2>', unsafe_allow_html=True)
-
+    st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.alerts")}</h2>', unsafe_allow_html=True)
+    
     col1, col2 = st.columns(2)
-
     with col1:
-        st.markdown("#### ⚠️ ALERTES ACTIVES")
-
+        st.markdown(f"#### {i18n.get('dashboard.active_alerts')}")
         alerts = []
-
+        # Détection d'alertes
         if not period_data.daily_data.empty and len(period_data.daily_data) > 1:
             latest_day = period_data.daily_data.iloc[-1]
             avg_operations = period_data.daily_data['nb_operations'].mean()
-
             if latest_day['nb_operations'] > avg_operations * 1.3:
-                alerts.append("📈 **Volume anormalement élevé** - Augmentation de +30%")
-
+                alerts.append(i18n.get('alerts.high_volume'))
             if latest_day['erreurs'] > 0 and (latest_day['erreurs'] / latest_day['nb_operations']) > 0.03:
-                alerts.append("❌ **Taux d'erreur critique** - Supérieur à 3%")
-
+                alerts.append(i18n.get('alerts.critical_error_rate'))
         if not period_data.engins_data.empty:
-            period_data.engins_data['taux_erreur'] = (
-                period_data.engins_data['erreurs'] /
-                period_data.engins_data['total_operations'] * 100
-            )
+            period_data.engins_data['taux_erreur'] = (period_data.engins_data['erreurs'] / period_data.engins_data['total_operations'] * 100)
             engins_problematiques = period_data.engins_data[period_data.engins_data['taux_erreur'] > 2.0]
-
             for _, engin in engins_problematiques.iterrows():
-                alerts.append(f"⚠️ **Maintenance préventive requise** - {engin['engin']} (taux erreur: {engin['taux_erreur']:.1f}%)")
-
+                alerts.append(i18n.get('alerts.maintenance_needed', equip=engin['engin'], rate=engin['taux_erreur']))
         if alerts:
             for alert in alerts:
                 if "❌" in alert or "⚠️" in alert:
@@ -517,84 +477,70 @@ def render_alerts_and_activity(period_data):
                 else:
                     UIComponents.render_alert(alert, "warning")
         else:
-            UIComponents.render_alert("✅ Aucune alerte active", "success")
-
+            UIComponents.render_alert(i18n.get('dashboard.no_alerts'), "success")
+    
     with col2:
-        st.markdown("#### 📝 DERNIÈRES OPÉRATIONS")
-
+        st.markdown(f"#### {i18n.get('dashboard.recent_ops')}")
         if not period_data.recent_ops.empty:
             recent_ops_display = period_data.recent_ops.head(10).copy()
-
             for _, row in recent_ops_display.iterrows():
                 timestamp_str = row['timestamp'].strftime('%H:%M') if hasattr(row['timestamp'], 'strftime') else str(row['timestamp'])
-
                 icon = ""
                 if row.get('urgence', 0):
                     icon += "⚠️ "
                 if row.get('erreur', 0):
                     icon += "❌ "
-
                 st.markdown(f"""
                 **{timestamp_str}** - {icon}{row['type_operation']}  
-                *{row['zone']}* | {row['engin']} | {row['duree_minutes']:.0f} min
+                *{row['zone']}* | {row['engin']} | {row['duree_minutes']:.0f} {i18n.get('common.minutes')}
                 """)
         else:
-            UIComponents.render_alert("Aucune opération récente", "info")
-
+            UIComponents.render_alert(i18n.get('dashboard.no_recent_ops'), "info")
 
 def render_recommendations(period_data):
-    st.markdown('<h2 class="section-title">💡 RECOMMANDATIONS INTELLIGENTES</h2>', unsafe_allow_html=True)
-
+    st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.recommendations")}</h2>', unsafe_allow_html=True)
+    
     recommendations = []
-
     if not period_data.recent_ops.empty and 'urgence' in period_data.recent_ops.columns:
         zone_urgences = period_data.recent_ops.groupby('zone')['urgence'].sum()
         if len(zone_urgences) > 0 and zone_urgences.max() > 0:
             zone_probleme = zone_urgences.idxmax()
             nb_urgences = int(zone_urgences.max())
-            recommendations.append(f"**Optimiser {zone_probleme}** : {nb_urgences} urgences détectées")
-
+            recommendations.append(i18n.get('recommendations.optimize_zone', zone=zone_probleme, urgences=nb_urgences))
     if not period_data.engins_data.empty:
-        period_data.engins_data['taux_erreur'] = (
-            period_data.engins_data['erreurs'] /
-            period_data.engins_data['total_operations'] * 100
-        )
+        period_data.engins_data['taux_erreur'] = (period_data.engins_data['erreurs'] / period_data.engins_data['total_operations'] * 100)
         if not period_data.engins_data.empty:
             engin_probleme = period_data.engins_data.loc[period_data.engins_data['taux_erreur'].idxmax()]
             if engin_probleme['taux_erreur'] > 2.0:
-                recommendations.append(f"**Maintenance {engin_probleme['engin']}** : Taux erreur: {engin_probleme['taux_erreur']:.1f}%")
-
+                recommendations.append(i18n.get('recommendations.maintenance', equip=engin_probleme['engin'], rate=engin_probleme['taux_erreur']))
     if not period_data.hourly_data.empty:
         heure_pic = period_data.hourly_data.loc[period_data.hourly_data['nb_operations'].idxmax(), 'heure']
         ops_pic = period_data.hourly_data['nb_operations'].max()
         heure_creux = period_data.hourly_data.loc[period_data.hourly_data['nb_operations'].idxmin(), 'heure']
         ops_creux = period_data.hourly_data['nb_operations'].min()
-
         if ops_pic > ops_creux * 1.5:
-            recommendations.append(f"**Équilibrage charge** : Déplacer des opérations de {heure_pic}h vers {heure_creux}h")
-
+            recommendations.append(i18n.get('recommendations.load_balancing', peak=heure_pic, offpeak=heure_creux))
     if recommendations:
         for i, rec in enumerate(recommendations, 1):
             st.markdown(f"{i}. {rec}")
     else:
-        UIComponents.render_alert("Analyse en cours... sélectionnez une période pour les recommandations.", "info")
-
+        UIComponents.render_alert(i18n.get('dashboard.analyzing'), "info")
 
 def render_financial_module(financial_metrics, period_data):
-    st.markdown('<h2 class="section-title">💰 MODULE FINANCIER</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 class="section-title">{i18n.get("financial.title")}</h2>', unsafe_allow_html=True)
 
     period_summary = financial_metrics.period_summary
-    st.markdown(f"#### 📅 **ANALYSE FINANCIÈRE POUR : {period_data.period_name.upper()}**")
+    st.markdown(f"#### {i18n.get('financial.analysis_for', period=period_data.period_name.upper())}")
 
     UIComponents.render_period_summary(period_summary)
 
     st.markdown(f"""
     <div style="background: {COLORS['info']}; color: white; padding: 10px 15px; border-radius: 10px; margin: 10px 0;">
-        🔒 **Données synchronisées** : Tous les utilisateurs voient exactement les mêmes chiffres
+        {i18n.get('financial.sync_badge')}
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("#### 📊 GAINS FINANCIERS BASÉS SUR LA PÉRIODE")
+    st.markdown(f"#### {i18n.get('financial.gains_title')}")
 
     fin_row1_col1, fin_row1_col2, fin_row1_col3, fin_row1_col4 = st.columns(4)
 
@@ -602,8 +548,8 @@ def render_financial_module(financial_metrics, period_data):
         st.markdown(f"""
         <div class="commission-card">
             <h3 style="color: white; margin: 0; font-size: 2rem;">${financial_metrics.daily_gains:,.0f}</h3>
-            <p style="margin: 0; opacity: 0.9;">Gains journaliers</p>
-            <small>Basé sur {period_summary['total_days']} jours</small>
+            <p style="margin: 0; opacity: 0.9;">{i18n.get('financial.daily_gains')}</p>
+            <small>{i18n.get('financial.based_on', days=period_summary['total_days'])}</small>
         </div>
         """, unsafe_allow_html=True)
 
@@ -611,8 +557,8 @@ def render_financial_module(financial_metrics, period_data):
         st.markdown(f"""
         <div class="gain-card">
             <h3 style="color: white; margin: 0; font-size: 2rem;">${financial_metrics.monthly_projection:,.0f}</h3>
-            <p style="margin: 0; opacity: 0.9;">Projection mensuelle</p>
-            <small>Sur {st.session_state.working_days} jours ouvrables</small>
+            <p style="margin: 0; opacity: 0.9;">{i18n.get('financial.monthly_projection')}</p>
+            <small>{i18n.get('financial.based_on', days=st.session_state.working_days)}</small>
         </div>
         """, unsafe_allow_html=True)
 
@@ -621,8 +567,8 @@ def render_financial_module(financial_metrics, period_data):
         <div style="background: linear-gradient(135deg, {COLORS['primary']} 0%, #1E40AF 100%); 
                     color: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
             <h3 style="color: white; margin: 0; font-size: 2rem;">${financial_metrics.your_commission_today:,.0f}</h3>
-            <p style="margin: 0; opacity: 0.9;">Commission journalière</p>
-            <small>Fixe + {st.session_state.commission_rate*100}% des gains</small>
+            <p style="margin: 0; opacity: 0.9;">{i18n.get('financial.daily_commission')}</p>
+            <small>{i18n.get('financial.fixed_plus', rate=st.session_state.commission_rate*100)}</small>
         </div>
         """, unsafe_allow_html=True)
 
@@ -631,8 +577,8 @@ def render_financial_module(financial_metrics, period_data):
         <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); 
                     color: white; padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
             <h3 style="color: white; margin: 0; font-size: 2rem;">${financial_metrics.your_commission_monthly:,.0f}</h3>
-            <p style="opacity: 0.9; font-size: 1rem;">🎯 Votre revenu mensuel</p>
-            <small>Basé sur la performance de {period_data.period_name}</small>
+            <p style="opacity: 0.9; font-size: 1rem;">{i18n.get('financial.monthly_income')}</p>
+            <small>{i18n.get('financial.based_on_performance', period=period_data.period_name)}</small>
         </div>
         """, unsafe_allow_html=True)
 
@@ -641,13 +587,13 @@ def render_financial_module(financial_metrics, period_data):
     col_graphique, col_resume = st.columns([3, 2])
 
     with col_graphique:
-        st.markdown("#### 📈 RÉPARTITION DES GAINS (MOYENNE JOURNALIÈRE)")
+        st.markdown(f"#### {i18n.get('financial.pie_chart_title')}")
         chart_gen = ChartGenerator()
         fig_fin = chart_gen.create_financial_pie_chart(financial_metrics.breakdown)
         st.plotly_chart(fig_fin, use_container_width=True)
 
     with col_resume:
-        st.markdown("#### 📝 RÉCAPITULATIF CONTRAT")
+        st.markdown(f"#### {i18n.get('financial.contract_summary')}")
 
         st.markdown('''
         <div style="
@@ -662,23 +608,23 @@ def render_financial_module(financial_metrics, period_data):
         st.markdown(f"""
         <div style="line-height: 2.2;">
             <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #E5E7EB; padding: 8px 0;">
-                <span style="font-weight: 600; color: #4B5563;">Fixé mensuel</span>
+                <span style="font-weight: 600; color: #4B5563;">{i18n.get('financial.monthly_fixed')}</span>
                 <span style="font-weight: 700; color: #1E3A8A;">${st.session_state.monthly_fixed:,.0f}</span>
             </div>
             <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #E5E7EB; padding: 8px 0;">
-                <span style="font-weight: 600; color: #4B5563;">Taux commission</span>
+                <span style="font-weight: 600; color: #4B5563;">{i18n.get('financial.commission_rate')}</span>
                 <span style="font-weight: 700; color: #10B981;">{st.session_state.commission_rate*100}%</span>
             </div>
             <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #E5E7EB; padding: 8px 0;">
-                <span style="font-weight: 600; color: #4B5563;">Jours ouvrables</span>
-                <span style="font-weight: 700; color: #F59E0B;">{st.session_state.working_days} jours</span>
+                <span style="font-weight: 600; color: #4B5563;">{i18n.get('financial.working_days')}</span>
+                <span style="font-weight: 700; color: #F59E0B;">{st.session_state.working_days} {i18n.get('common.days')}</span>
             </div>
             <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #E5E7EB; padding: 8px 0;">
-                <span style="font-weight: 600; color: #4B5563;">Coût horaire</span>
+                <span style="font-weight: 600; color: #4B5563;">{i18n.get('financial.hourly_cost')}</span>
                 <span style="font-weight: 700; color: #8B5CF6;">${st.session_state.hourly_cost}/h</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                <span style="font-weight: 600; color: #4B5563;">Coût erreur</span>
+                <span style="font-weight: 600; color: #4B5563;">{i18n.get('financial.error_cost')}</span>
                 <span style="font-weight: 700; color: #EF4444;">${st.session_state.error_cost}</span>
             </div>
         </div>
@@ -686,44 +632,37 @@ def render_financial_module(financial_metrics, period_data):
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown("#### 🔒 VÉRIFICATION & ACTIONS")
+        st.markdown(f"#### {i18n.get('financial.verification')}")
         st.info(f"""
-        **Période analysée :** {period_data.period_name}
-        **Hash de calcul :** `{financial_metrics.transaction_hash}`
-        **Hash des données :** `{PUBLIC_DATA_HASH}`
+        {i18n.get('financial.period_analyzed')}  
+        {i18n.get('financial.from', date=period_summary['start_date'])}  
+        {i18n.get('financial.to', date=period_summary['end_date'])}  
+        {i18n.get('financial.days_count', days=period_summary['total_days'])}  
+        {i18n.get('financial.data_hash', hash=PUBLIC_DATA_HASH)}
         """)
 
-        # Nouvelle section EXPORT
-        st.markdown("#### 📥 EXPORT")
-        col_exp1, col_exp2 = st.columns(2)
-        with col_exp1:
-            if st.button("📊 Exporter Excel", type="secondary"):
-                excel_data = generate_excel_report(period_data, financial_metrics)
-                st.download_button(
-                    label="Télécharger le rapport Excel",
-                    data=excel_data,
-                    file_name=f"rapport_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-        with col_exp2:
-            if st.button("🔄 Actualiser", type="primary"):
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if st.button(i18n.get('financial.export_report'), type="secondary"):
+                # Placeholder: génération de rapport à implémenter
+                st.success(i18n.get('financial.report_generated'))
+        with col_btn2:
+            if st.button(i18n.get('financial.refresh'), type="primary"):
                 st.rerun()
 
     st.markdown("---")
 
-    st.markdown("#### 📋 DÉTAILS DES CALCULS - ANALYSE FINANCIÈRE")
+    st.markdown(f"#### {i18n.get('financial.details_expander')}")
 
-    with st.expander("🔍 Afficher les calculs détaillés", expanded=True):
-        st.markdown(f"""
-        ### 📅 PÉRIODE ANALYSÉE
-        **Du :** {period_summary['start_date']}
-        **Au :** {period_summary['end_date']}
-        **Nombre de jours :** {period_summary['total_days']} jours
-        **Hash des données :** `{PUBLIC_DATA_HASH}`
-        """)
+    with st.expander(i18n.get('financial.show_details'), expanded=True):
+        st.markdown(f"### {i18n.get('financial.period_analyzed')}")
+        st.markdown(f"{i18n.get('financial.from', date=period_summary['start_date'])}")
+        st.markdown(f"{i18n.get('financial.to', date=period_summary['end_date'])}")
+        st.markdown(f"{i18n.get('financial.days_count', days=period_summary['total_days'])}")
+        st.markdown(f"{i18n.get('financial.data_hash', hash=PUBLIC_DATA_HASH)}")
         st.divider()
 
-        st.markdown("### 1. GAIN TEMPS (Réduction de durée des opérations)")
+        st.markdown(f"### {i18n.get('financial.gain_time')}")
 
         baseline_duration = st.session_state.baseline_duration
         avg_duration = period_summary['avg_duration']
@@ -736,21 +675,21 @@ def render_financial_module(financial_metrics, period_data):
         total_time_gain = gain_per_op * total_ops
 
         st.markdown(f"""
-        **Paramètres :**
-        - Durée de référence : {baseline_duration} minutes
-        - Durée moyenne période : {avg_duration:.1f} minutes
-        - Coût horaire moyen : ${hourly_cost}$/heure
-        - Total opérations période : {total_ops:,} opérations
+        {i18n.get('financial.params')}
+        - {i18n.get('financial.baseline_duration')}: {baseline_duration} {i18n.get('common.minutes')}
+        - {i18n.get('financial.avg_duration')}: {avg_duration:.1f} {i18n.get('common.minutes')}
+        - {i18n.get('financial.hourly_cost')}: ${hourly_cost}/h
+        - {i18n.get('financial.total_operations')}: {total_ops:,} {i18n.get('common.operations')}
 
-        **Calcul :**
-        - Économie par opération : {time_saved_minutes:.1f} minutes = {time_saved_hours:.3f} heures
-        - Gain par opération : {time_saved_hours:.3f} h × ${hourly_cost}/h = ${gain_per_op:.2f}$
-        - Gain total temps : {total_ops:,} opérations × ${gain_per_op:.2f} = ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
-        - Gain journalier moyen : ${financial_metrics.breakdown.get('time_gain', 0):,.2f}$/jour
+        {i18n.get('financial.calculation')}
+        - {i18n.get('financial.savings_per_op')}: {time_saved_minutes:.1f} {i18n.get('common.minutes')} = {time_saved_hours:.3f} {i18n.get('common.hours')}
+        - {i18n.get('financial.gain_per_op')}: {time_saved_hours:.3f} h × ${hourly_cost}/h = **${gain_per_op:.2f}**
+        - {i18n.get('financial.total_gain')}: {total_ops:,} {i18n.get('common.operations')} × ${gain_per_op:.2f} = **${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}**
+        - {i18n.get('financial.daily_avg')}: **${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day')}**
         """)
         st.divider()
 
-        st.markdown("### 2. GAIN ERREURS (Réduction des erreurs)")
+        st.markdown(f"### {i18n.get('financial.gain_errors')}")
 
         baseline_error_rate = st.session_state.baseline_error_rate * 100
         current_error_rate = period_summary['error_rate']
@@ -760,38 +699,38 @@ def render_financial_module(financial_metrics, period_data):
         total_error_gain = errors_avoided * error_cost
 
         st.markdown(f"""
-        **Paramètres :**
-        - Taux erreur référence : {baseline_error_rate:.1f}%
-        - Taux erreur période : {current_error_rate:.1f}%
-        - Coût par erreur : ${error_cost}
-        - Total opérations période : {total_ops:,} opérations
+        {i18n.get('financial.params')}
+        - {i18n.get('financial.baseline_error_rate')}: {baseline_error_rate:.1f}%
+        - {i18n.get('financial.current_error_rate')}: {current_error_rate:.1f}%
+        - {i18n.get('financial.error_cost')}: ${error_cost}
+        - {i18n.get('financial.total_operations')}: {total_ops:,} {i18n.get('common.operations')}
 
-        **Calcul :**
-        - Erreurs évitées : ({baseline_error_rate:.1f}% - {current_error_rate:.1f}%) × {total_ops:,} = ${errors_avoided:.1f}$ erreurs
-        - Gain total erreurs : {errors_avoided:.1f} erreurs × ${error_cost} = ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
-        - Gain journalier moyen : ${financial_metrics.breakdown.get('error_gain', 0):,.2f}$/jour
+        {i18n.get('financial.calculation')}
+        - {i18n.get('financial.errors_avoided')}: ({baseline_error_rate:.1f}% - {current_error_rate:.1f}%) × {total_ops:,} = **{errors_avoided:.1f}** {i18n.get('common.errors')}
+        - {i18n.get('financial.total_gain')}: {errors_avoided:.1f} {i18n.get('common.errors')} × ${error_cost} = **${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}**
+        - {i18n.get('financial.daily_avg')}: **${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day')}**
         """)
         st.divider()
 
-        st.markdown("### 3. GAIN MAINTENANCE (Prévention des pannes)")
+        st.markdown(f"### {i18n.get('financial.gain_maintenance')}")
 
         maintenance_cost = 500
         maintenance_gain_period = financial_metrics.breakdown.get('maintenance_gain_period', 0)
         maintenance_alerts = int(maintenance_gain_period / maintenance_cost) if maintenance_cost > 0 else 0
 
         st.markdown(f"""
-        **Paramètres :**
-        - Alertes maintenance détectées : {maintenance_alerts} alertes
-        - Coût évité par alerte : ${maintenance_cost}
-        - Gain total maintenance période : ${maintenance_gain_period:,.2f}
+        {i18n.get('financial.params')}
+        - {i18n.get('financial.maintenance_alerts')}: {maintenance_alerts} {i18n.get('common.alerts')}
+        - {i18n.get('financial.maintenance_cost_per_alert')}: ${maintenance_cost}
+        - {i18n.get('financial.maintenance_gain_total')}: ${maintenance_gain_period:,.2f}
 
-        **Calcul :**
-        - Gain total maintenance : {maintenance_alerts} alertes × ${maintenance_cost}/alerte = ${maintenance_gain_period:,.2f}$
-        - Gain journalier moyen : ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}$/jour
+        {i18n.get('financial.calculation')}
+        - {i18n.get('financial.total_gain')}: {maintenance_alerts} × ${maintenance_cost} = **${maintenance_gain_period:,.2f}**
+        - {i18n.get('financial.daily_avg')}: **${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day')}**
         """)
         st.divider()
 
-        st.markdown("### 4. GAIN CARBURANT (Optimisation des trajets)")
+        st.markdown(f"### {i18n.get('financial.gain_fuel')}")
 
         trucks_per_day = min(500, period_summary['avg_daily_operations'] * 0.3)
         fuel_saving = 1.5
@@ -800,42 +739,42 @@ def render_financial_module(financial_metrics, period_data):
         total_fuel_gain = daily_fuel_gain * period_summary['total_days']
 
         st.markdown(f"""
-        **Paramètres :**
-        - Camions par jour : {trucks_per_day:.0f} camions
-        - Économie par camion : ${fuel_saving}$/jour
-        - Nombre de jours : {period_summary['total_days']} jours
+        {i18n.get('financial.params')}
+        - {i18n.get('financial.trucks_per_day')}: {trucks_per_day:.0f} {i18n.get('common.trucks')}
+        - {i18n.get('financial.fuel_saving_per_truck')}: ${fuel_saving}{i18n.get('common.per_day')}
+        - {i18n.get('financial.days_analyzed')}: {period_summary['total_days']} {i18n.get('common.days')}
 
-        **Calcul :**
-        - Gain carburant journalier : {trucks_per_day:.0f} × ${fuel_saving} = ${daily_fuel_gain:.2f}$/jour
-        - Gain total carburant : ${daily_fuel_gain:.2f}$/jour × {period_summary['total_days']} jours = ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
+        {i18n.get('financial.calculation')}
+        - {i18n.get('financial.daily_fuel_gain')}: {trucks_per_day:.0f} × ${fuel_saving} = **${daily_fuel_gain:.2f}{i18n.get('common.per_day')}**
+        - {i18n.get('financial.total_fuel_gain')}: ${daily_fuel_gain:.2f}{i18n.get('common.per_day')} × {period_summary['total_days']} {i18n.get('common.days')} = **${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}**
         """)
         st.divider()
 
-        st.markdown("### 📊 SYNTHÈSE FINANCIÈRE")
+        st.markdown(f"### {i18n.get('financial.summary')}")
         st.markdown(f"""
-        **Gains totaux sur la période :**
-        - Gain temps : ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
-        - Gain erreurs : ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
-        - Gain maintenance : ${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}$
-        - Gain carburant : ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
+        {i18n.get('financial.total_gains_period')}
+        - {i18n.get('financial.gain_time')}: **${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}**
+        - {i18n.get('financial.gain_errors')}: **${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}**
+        - {i18n.get('financial.gain_maintenance')}: **${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}**
+        - {i18n.get('financial.gain_fuel')}: **${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}**
 
-        **Total gains période :** **${financial_metrics.period_gains:,.2f}**
+        **{i18n.get('financial.total_period_gains')}:** **${financial_metrics.period_gains:,.2f}**
 
-        **Moyennes journalières :**
-        - Gain temps : ${financial_metrics.breakdown.get('time_gain', 0):,.2f}$/jour
-        - Gain erreurs : ${financial_metrics.breakdown.get('error_gain', 0):,.2f}$/jour
-        - Gain maintenance : ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}$/jour
-        - Gain carburant : ${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}$/jour
+        {i18n.get('financial.daily_averages')}
+        - {i18n.get('financial.gain_time')}: **${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day')}**
+        - {i18n.get('financial.gain_errors')}: **${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day')}**
+        - {i18n.get('financial.gain_maintenance')}: **${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day')}**
+        - {i18n.get('financial.gain_fuel')}: **${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}{i18n.get('common.per_day')}**
 
-        **Total gains journaliers :${financial_metrics.daily_gains:,.2f}$/jour
+        **{i18n.get('financial.total_daily_gains')}:** **${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day')}**
 
-        **Projection mensuelle ({st.session_state.working_days} jours) :
-        - ${financial_metrics.daily_gains:,.2f}$/jour × {st.session_state.working_days} jours = ${financial_metrics.monthly_projection:,.2f}$
+        {i18n.get('financial.monthly_projection_detail', days=st.session_state.working_days)}
+        - **${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day')} × {st.session_state.working_days} {i18n.get('common.days')} = ${financial_metrics.monthly_projection:,.2f}**
 
-        **Votre commission :**
-        - Fixe mensuel : ${st.session_state.monthly_fixed:,.2f}$
-        - Variable ({st.session_state.commission_rate*100}%) : ${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}$
-        - Commission totale : ${financial_metrics.your_commission_monthly:,.2f}$
+        {i18n.get('financial.your_commission_detail')}
+        - {i18n.get('financial.fixed_monthly')}: **${st.session_state.monthly_fixed:,.2f}**
+        - {i18n.get('financial.variable', rate=st.session_state.commission_rate*100)}: **${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}**
+        - {i18n.get('financial.total_commission')}: **${financial_metrics.your_commission_monthly:,.2f}**
         """)
 
 
