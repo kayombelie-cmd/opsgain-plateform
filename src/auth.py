@@ -27,38 +27,58 @@ class Authentication:
 
     @staticmethod
     def render_login_page():
-        """Affiche la page de login."""
-        # CSS (identique à avant, mais sans set_page_config)
-        st.markdown("""
-        <style>
-            /* styles inchangés */
-        </style>
-        """, unsafe_allow_html=True)
+     st.markdown("""
+    <style>
+        /* Centrage global */
+        .stApp {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .block-container {
+            max-width: 500px !important;
+            text-align: center !important;
+            padding: 2rem !important;
+        }
+        .stTextInput, .stButton {
+            margin: 0 auto !important;
+        }
+        hr {
+            margin: 20px auto !important;
+        }
+        .login-footer, .login-security {
+            text-align: center;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
-        # Contenu principal avec i18n
-        st.markdown('<div class="login-main">', unsafe_allow_html=True)
-        st.markdown(f"<h1 style='text-align: center; font-size: 3.5rem; color: #3B82F6;'>🔐</h1>", unsafe_allow_html=True)
-        st.markdown(f"<h2 class='login-title'>{i18n.get('auth.title')}</h2>", unsafe_allow_html=True)
-        st.markdown(f"<p class='login-slogan'>{i18n.get('auth.slogan')}</p>", unsafe_allow_html=True)
-        st.markdown(f"<p class='login-description'><strong>{i18n.get('auth.description')}</strong></p>", unsafe_allow_html=True)
-        st.markdown(f"<p class='login-caption'>📊 {i18n.get('app.subtitle', 'Dashboard opérationnel synchronisé')} • 🚀 {APP_VERSION} • 📅 Données 2026</p>", unsafe_allow_html=True)
-        st.markdown('<hr class="login-divider">', unsafe_allow_html=True)
+    st.markdown('<div class="block-container">', unsafe_allow_html=True)
 
-        password = st.text_input(
-            i18n.get('auth.password_label'),
-            type="password",
-            help=i18n.get('auth.password_help', default="Entrez le mot de passe fourni par votre administrateur OpsGain"),
-            key="password_input"
-        )
+    st.markdown("<h1 style='text-align: center; font-size: 3.5rem; color: #3B82F6;'>🔐</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; color: #1E3A8A; font-size: 2.2rem; font-weight: 800;'>{i18n.get('auth.title')}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #10B981; font-size: 1.1rem; font-weight: 600;'>{i18n.get('auth.slogan')}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #475569; font-size: 0.95rem;'><strong>{i18n.get('auth.description')}</strong></p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #6B7280; font-size: 0.8rem; margin-bottom: 20px;'>📊 {i18n.get('app.subtitle')} • 🚀 {APP_VERSION} • 📅 Données 2026</p>", unsafe_allow_html=True)
 
-        if st.button(i18n.get('auth.button_access'), type="primary", use_container_width=True):
-            if password == DEFAULT_PASSWORD:
-                st.session_state.authenticated = True
-                st.rerun()
-            else:
-                st.error(i18n.get('auth.wrong_password'))
+    st.divider()
 
-        st.markdown('<hr class="login-divider">', unsafe_allow_html=True)
-        st.markdown(f"<p class='login-footer'>© 2026 OpsGain Technologies • Tous droits réservés</p>", unsafe_allow_html=True)
-        st.markdown(f"<p class='login-security'>{i18n.get('app.footer', '🔐 Accès sécurisé • 🔄 Données synchronisées • 📈 ROI vérifiable')}</p>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+    password = st.text_input(
+        i18n.get('auth.password_label'),
+        type="password",
+        label_visibility="collapsed",
+        placeholder=i18n.get('auth.password_label')
+    )
+
+    if st.button(i18n.get('auth.button_access'), type="primary", use_container_width=True):
+        if password == DEFAULT_PASSWORD:
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error(i18n.get('auth.wrong_password'))
+
+    st.divider()
+    st.markdown("<p style='text-align: center; color: #6B7280; font-size: 0.85rem;'>© 2026 OpsGain Technologies • Tous droits réservés</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #9CA3AF; font-size: 0.75rem; margin-top: 10px;'>{i18n.get('app.footer')}</p>", unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
