@@ -41,8 +41,10 @@ class I18n:
             if kwargs:
                 value = value.format(**kwargs)
             return value
-        except (KeyError, TypeError, AttributeError):
-            return default if default else key
+        except (KeyError, TypeError, AttributeError) as e:
+            # Optionnel : logger l'erreur
+            print(f"[i18n] Clé manquante : {key}")  # ou utiliser logger
+            return default if default is not None else key
 
 
 # Instance globale

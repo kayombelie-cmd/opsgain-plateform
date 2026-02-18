@@ -129,7 +129,7 @@ def render_sidebar(data_sync):
         render_financial_params()
         render_sync_section(data_sync)
         render_info_section()
-        
+
 def handle_period_selection(period_key, default_start, default_end):
     if period_key == "custom":
 # ... afficher les date_input
@@ -255,9 +255,13 @@ def render_sync_section(data_sync):
     st.markdown("---")
     st.markdown(f"### {i18n.get('sidebar.data_sync')}")
     
-    st.info(i18n.get('sidebar.sync_info', hash=PUBLIC_DATA_HASH))
+# Texte par défaut au cas où la traduction manquerait
+default_sync_info = f"**Hash des données :** `{PUBLIC_DATA_HASH}`\n\n**Pour partager les mêmes données :**\n1. Configurez la période ci-dessus\n2. Générez le lien de partage\n3. Envoyez-le à vos collaborateurs"
+
+# Utilisation avec fallback
+st.info(i18n.get('sidebar.sync_info', default=default_sync_info, hash=PUBLIC_DATA_HASH))
     
-    if st.button(i18n.get('sidebar.generate_link'), width='stretch', type="secondary"):
+if st.button(i18n.get('sidebar.generate_link'), width='stretch', type="secondary"):
         selected_period = st.session_state.get('selected_period', i18n.get('periods.last_30_days'))
         start_date = st.session_state.get('start_date', datetime.now() - timedelta(days=30))
         end_date = st.session_state.get('end_date', datetime.now())
