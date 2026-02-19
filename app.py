@@ -29,39 +29,39 @@ logger = setup_logger(__name__)
 
 
 def main():
-    """Fonction principale de l'application."""
-try:
-    if 'language' not in st.session_state:
-        st.session_state.language = 'fr'
-    i18n.set_language(st.session_state.language)
+    try:
+        # st.set_page_config est déjà en tête (si vous l'avez déplacé)
+        if 'language' not in st.session_state:
+            st.session_state.language = 'fr'
+        i18n.set_language(st.session_state.language)
 
-    Authentication.check_auth()
+        Authentication.check_auth()
 
-    st.markdown(UIComponents.style_css(), unsafe_allow_html=True)
+        st.markdown(UIComponents.style_css(), unsafe_allow_html=True)
 
-    # Initialisation des services avec le mode de données (réelles ou simulées)
-    data_sync = DataSynchronizer(use_real_data=USE_REAL_DATA)
-    finance_calc = FinancialCalculator(st.session_state)
-    chart_gen = ChartGenerator()
-    map_gen = MapGenerator()
+        data_sync = DataSynchronizer(use_real_data=USE_REAL_DATA)
+        finance_calc = FinancialCalculator(st.session_state)
+        chart_gen = ChartGenerator()
+        map_gen = MapGenerator()
 
-    render_sidebar(data_sync)
+        render_sidebar(data_sync)
 
-    with st.spinner("Chargement des données synchronisées..."):
-        period_data = data_sync.load_period_data()
+        with st.spinner("Chargement des données synchronisées..."):
+            period_data = data_sync.load_period_data()
 
-    financial_metrics = finance_calc.calculate(period_data)
+        financial_metrics = finance_calc.calculate(period_data)
 
-    render_header(period_data.period_name)
-    render_operational_summary(period_data, financial_metrics)
-    render_performance_analysis(period_data, chart_gen)
-    render_equipment_performance(period_data, chart_gen)
-    render_realtime_map(map_gen)
-    render_alerts_and_activity(period_data)
-    render_recommendations(period_data)
-    render_financial_module(financial_metrics, period_data)
-    render_footer(financial_metrics, period_data.period_name)
-except Exception as e:
+        render_header(period_data.period_name)
+        render_operational_summary(period_data, financial_metrics)
+        render_performance_analysis(period_data, chart_gen)
+        render_equipment_performance(period_data, chart_gen)
+        render_realtime_map(map_gen)
+        render_alerts_and_activity(period_data)
+        render_recommendations(period_data)
+        render_financial_module(financial_metrics, period_data)
+        render_footer(financial_metrics, period_data.period_name)
+
+    except Exception as e:
         st.error(f"Une erreur est survenue : {e}")
         st.exception(e)  # Affiche la trace complète
 
