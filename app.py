@@ -2,22 +2,27 @@
 Point d'entrée principal de l'application OpsGain Platform.
 """
 import streamlit as st
+# ⚠️ MODIF : set_page_config placé AVANT tous les autres imports
+st.set_page_config(
+    page_title="OpsGain Platform / Port Intelligent",  # chaîne en dur pour éviter dépendance aux imports
+    page_icon="🚛",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 import time
 from datetime import datetime, timedelta
 from streamlit_folium import st_folium
 from src.utils.i18n import i18n
-from src.config import USE_REAL_DATA
 # Import des modules refactorés
 from src.auth import Authentication
-from src.config import USE_REAL_DATA
-from src.config import APP_NAME, APP_VERSION, PUBLIC_DATA_HASH, PERIODS, COLORS, USE_REAL_DATA
+from src.config import APP_NAME, APP_VERSION, PUBLIC_DATA_HASH, PERIODS, COLORS, FINANCIAL_PARAMS, USE_REAL_DATA
 from src.utils.logger import setup_logger
 from src.data.sync import DataSynchronizer
 from src.finance.calculator import FinancialCalculator
 from src.visualization.components import UIComponents
 from src.visualization.charts import ChartGenerator
 from src.visualization.maps import MapGenerator
-from src.utils.exports import generate_excel_report  # Nouvel import
+from src.utils.exports import generate_excel_report  # Nouvel import (à implémenter)
 
 # Configuration
 logger = setup_logger(__name__)
@@ -25,13 +30,7 @@ logger = setup_logger(__name__)
 
 def main():
     """Fonction principale de l'application."""
-    st.set_page_config(
-        page_title=APP_NAME,
-        page_icon="🚛",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-
+try:
     if 'language' not in st.session_state:
         st.session_state.language = 'fr'
     i18n.set_language(st.session_state.language)
@@ -62,7 +61,9 @@ def main():
     render_recommendations(period_data)
     render_financial_module(financial_metrics, period_data)
     render_footer(financial_metrics, period_data.period_name)
-
+except Exception as e:
+        st.error(f"Une erreur est survenue : {e}")
+        st.exception(e)  # Affiche la trace complète
 
 def render_sidebar(data_sync):
     with st.sidebar:
@@ -130,21 +131,26 @@ def render_sidebar(data_sync):
         render_sync_section(data_sync)
         render_info_section()
 
+
 def handle_period_selection(period_key, default_start, default_end):
     if period_key == "custom":
-# ... afficher les date_input
-        if period_key == "7d":
-            days = 7
-        elif period_key == "30d":
-            days = 30
-        elif period_key == "90d":
-            days = 90
-        else:
-            days = 30  # fallback
+        col1, col2 = st.columns(2)
+        with col1:
+            start_date_input = st.date_input("Date début", value=default_start)
+        with col2:
+            end_date_input = st.date_input("Date fin", value=default_end)
+        st.session_state.start_date = datetime.combine(start_date_input, datetime.min.time())
+        st.session_state.end_date = datetime.combine(end_date_input, datetime.max.time())
+        st.session_state.selected_period = f"{start_date_input.strftime('%d/%m/%Y')} au {end_date_input.strftime('%d/%m/%Y')}"
+    else:
+        days_map = {"7d": 7, "30d": 30, "90d": 90}
+        days = days_map.get(period_key, 30)
         start_date = default_end - timedelta(days=days)
         st.session_state.start_date = start_date
         st.session_state.end_date = default_end
-        st.session_state.selected_period = i18n.get(f'periods.last_{days}_days')
+        period_name_key = f"periods.last_{days}_days"
+        st.session_state.selected_period = i18n.get(period_name_key, f"{days} derniers jours")
+
 
 def render_filters():
     st.markdown("---")
@@ -188,7 +194,7 @@ def render_financial_params():
     col3, col4 = st.columns(2)
     with col3:
         hourly_cost = st.number_input(
-            "Coût horaire moyen ($/h)",
+            i18n.get('sidebar.hourly_cost'),
             min_value=10,
             max_value=100,
             value=st.session_state.hourly_cost,
@@ -199,7 +205,7 @@ def render_financial_params():
 
     with col4:
         error_cost = st.number_input(
-            "Coût erreur moyen ($)",
+            i18n.get('sidebar.error_cost'),
             min_value=50,
             max_value=500,
             value=st.session_state.error_cost,
@@ -212,7 +218,7 @@ def render_financial_params():
     col5, col6 = st.columns(2)
     with col5:
         baseline_duration = st.number_input(
-            "Durée référence (min)",
+            i18n.get('sidebar.baseline_duration'),
             min_value=30,
             max_value=120,
             value=st.session_state.baseline_duration,
@@ -223,7 +229,7 @@ def render_financial_params():
 
     with col6:
         baseline_error_input = st.number_input(
-            "Taux erreur référence (%)",
+            i18n.get('sidebar.baseline_error'),
             min_value=1.0,
             max_value=10.0,
             value=st.session_state.baseline_error_rate * 100,
@@ -233,7 +239,7 @@ def render_financial_params():
         st.session_state.baseline_error_rate = baseline_error_input / 100
 
     working_days = st.slider(
-        "Jours ouvrables/mois",
+        i18n.get('sidebar.working_days'),
         20, 26,
         st.session_state.working_days,
         key="working_days_input"
@@ -252,16 +258,26 @@ def init_financial_params():
 
 
 def render_sync_section(data_sync):
+    # Ne rien afficher si l'utilisateur n'est pas authentifié
+    if not st.session_state.get('authenticated', False):
+        return
+
     st.markdown("---")
     st.markdown(f"### {i18n.get('sidebar.data_sync')}")
     
-# Texte par défaut au cas où la traduction manquerait
-default_sync_info = f"**Hash des données :** `{PUBLIC_DATA_HASH}`\n\n**Pour partager les mêmes données :**\n1. Configurez la période ci-dessus\n2. Générez le lien de partage\n3. Envoyez-le à vos collaborateurs"
+    # Texte par défaut si la traduction est absente
+    default_sync_info = f"**Hash des données :** `{PUBLIC_DATA_HASH}`\n\n**Pour partager les mêmes données :**\n1. Configurez la période ci-dessus\n2. Générez le lien de partage\n3. Envoyez-le à vos collaborateurs"
 
-# Utilisation avec fallback
-st.info(i18n.get('sidebar.sync_info', default=default_sync_info, hash=PUBLIC_DATA_HASH))
+    # Récupération du texte traduit (ou défaut)
+    sync_info_text = i18n.get('sidebar.sync_info', default=default_sync_info)
+
+    # Si le texte contient un marqueur {hash}, on le remplace
+    if '{hash}' in sync_info_text:
+        sync_info_text = sync_info_text.format(hash=PUBLIC_DATA_HASH)
+
+    st.info(sync_info_text)
     
-if st.button(i18n.get('sidebar.generate_link'), width='stretch', type="secondary"):
+    if st.button(i18n.get('sidebar.generate_link'), use_container_width=True, type="secondary"):
         selected_period = st.session_state.get('selected_period', i18n.get('periods.last_30_days'))
         start_date = st.session_state.get('start_date', datetime.now() - timedelta(days=30))
         end_date = st.session_state.get('end_date', datetime.now())
@@ -278,6 +294,7 @@ if st.button(i18n.get('sidebar.generate_link'), width='stretch', type="secondary
             </button>
         </a>
         """, unsafe_allow_html=True)
+
 
 def render_info_section():
     st.markdown("---")
@@ -375,6 +392,7 @@ def render_operational_summary(period_data, financial_metrics):
         )
     st.markdown("---")
 
+
 def render_performance_analysis(period_data, chart_gen):
     st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.performance_analysis")}</h2>', unsafe_allow_html=True)
     
@@ -390,7 +408,7 @@ def render_performance_analysis(period_data, chart_gen):
         st.markdown(f"#### {i18n.get('dashboard.hourly_distribution')}")
         if not period_data.hourly_data.empty:
             fig2 = chart_gen.create_hourly_distribution_chart(period_data.hourly_data)
-            st.plotly_chart(fig2, width='stretch')
+            st.plotly_chart(fig2, use_container_width=True)
         else:
             UIComponents.render_alert(i18n.get('dashboard.no_hourly_data'), "warning")
 
@@ -402,7 +420,7 @@ def render_equipment_performance(period_data, chart_gen):
     with col1:
         if not period_data.engins_data.empty:
             fig3 = chart_gen.create_engins_performance_chart(period_data.engins_data)
-            st.plotly_chart(fig3, width='stretch')
+            st.plotly_chart(fig3, use_container_width=True)
         else:
             UIComponents.render_alert(i18n.get('dashboard.no_data'), "warning")
     with col2:
@@ -454,6 +472,7 @@ def render_realtime_map(map_gen):
         st.markdown(i18n.get('dashboard.legend_customs'))
         st.markdown(i18n.get('dashboard.legend_maintenance'))
 
+
 def render_alerts_and_activity(period_data):
     st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.alerts")}</h2>', unsafe_allow_html=True)
     
@@ -501,6 +520,7 @@ def render_alerts_and_activity(period_data):
         else:
             UIComponents.render_alert(i18n.get('dashboard.no_recent_ops'), "info")
 
+
 def render_recommendations(period_data):
     st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.recommendations")}</h2>', unsafe_allow_html=True)
     
@@ -529,6 +549,7 @@ def render_recommendations(period_data):
             st.markdown(f"{i}. {rec}")
     else:
         UIComponents.render_alert(i18n.get('dashboard.analyzing'), "info")
+
 
 def render_financial_module(financial_metrics, period_data):
     st.markdown(f'<h2 class="section-title">{i18n.get("financial.title")}</h2>', unsafe_allow_html=True)
@@ -647,11 +668,11 @@ def render_financial_module(financial_metrics, period_data):
 
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
-            if st.button(i18n.get('financial.export_report'), type="secondary"):
+            if st.button(i18n.get('financial.export_report'), type="secondary", use_container_width=True):
                 # Placeholder: génération de rapport à implémenter
                 st.success(i18n.get('financial.report_generated'))
         with col_btn2:
-            if st.button(i18n.get('financial.refresh'), type="primary"):
+            if st.button(i18n.get('financial.refresh'), type="primary", use_container_width=True):
                 st.rerun()
 
     st.markdown("---")
