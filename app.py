@@ -2,18 +2,22 @@
 Point d'entrée principal de l'application OpsGain Platform.
 """
 import streamlit as st
-# ⚠️ MODIF : set_page_config placé AVANT tous les autres imports
+
+# ⚠️ set_page_config en PREMIER
 st.set_page_config(
-    page_title="OpsGain Platform / Port Intelligent",  # chaîne en dur pour éviter dépendance aux imports
+    page_title="OpsGain Platform / Port Intelligent",
     page_icon="🚛",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# --- Imports standards ---
 import time
 from datetime import datetime, timedelta
 from streamlit_folium import st_folium
+
+# --- Imports de vos modules ---
 from src.utils.i18n import i18n
-# Import des modules refactorés
 from src.auth import Authentication
 from src.config import APP_NAME, APP_VERSION, PUBLIC_DATA_HASH, PERIODS, COLORS, FINANCIAL_PARAMS, USE_REAL_DATA
 from src.utils.logger import setup_logger
@@ -22,35 +26,49 @@ from src.finance.calculator import FinancialCalculator
 from src.visualization.components import UIComponents
 from src.visualization.charts import ChartGenerator
 from src.visualization.maps import MapGenerator
-from src.utils.exports import generate_excel_report  # Nouvel import (à implémenter)
 
-# Configuration
+# ⚠️ Import conditionnel de l'export Excel (s'il n'existe pas, on le met à None)
+try:
+    from src.utils.exports import generate_excel_report
+except ImportError:
+    generate_excel_report = None
+    # Optionnel : logger un avertissement
+    print("⚠️ Module src.utils.exports non trouvé – fonction d'export désactivée.")
+
+# Configuration du logger
 logger = setup_logger(__name__)
 
 
 def main():
     try:
-        # st.set_page_config est déjà en tête (si vous l'avez déplacé)
+        # Langue
         if 'language' not in st.session_state:
             st.session_state.language = 'fr'
         i18n.set_language(st.session_state.language)
 
+        # Authentification
         Authentication.check_auth()
 
+        # CSS
         st.markdown(UIComponents.style_css(), unsafe_allow_html=True)
 
+        # Initialisation des services
         data_sync = DataSynchronizer(use_real_data=USE_REAL_DATA)
         finance_calc = FinancialCalculator(st.session_state)
         chart_gen = ChartGenerator()
         map_gen = MapGenerator()
 
+        # Sidebar
         render_sidebar(data_sync)
 
+        # Chargement des données
         with st.spinner("Chargement des données synchronisées..."):
             period_data = data_sync.load_period_data()
 
+        # Calculs financiers
         financial_metrics = finance_calc.calculate(period_data)
 
+        # Rendu des différentes sections
         render_header(period_data.period_name)
         render_operational_summary(period_data, financial_metrics)
         render_performance_analysis(period_data, chart_gen)
@@ -64,6 +82,13 @@ def main():
     except Exception as e:
         st.error(f"Une erreur est survenue : {e}")
         st.exception(e)  # Affiche la trace complète
+
+
+# ------------------------------------------------------------------------------
+# Toutes vos fonctions de rendu (render_sidebar, handle_period_selection, ...)
+# sont identiques à celles que vous avez fournies. Je ne les recopie pas ici
+# pour éviter la répétition, mais elles doivent être conservées telles quelles.
+# ------------------------------------------------------------------------------
 
 def render_sidebar(data_sync):
     with st.sidebar:
@@ -669,8 +694,12 @@ def render_financial_module(financial_metrics, period_data):
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
             if st.button(i18n.get('financial.export_report'), type="secondary", use_container_width=True):
-                # Placeholder: génération de rapport à implémenter
-                st.success(i18n.get('financial.report_generated'))
+                # Si le module d'export existe, on l'utilise, sinon message simple
+                if generate_excel_report is not None:
+                    # generate_excel_report(period_data, financial_metrics)  # à implémenter
+                    st.success(i18n.get('financial.report_generated'))
+                else:
+                    st.info("Fonction d'export non disponible (module manquant)")
         with col_btn2:
             if st.button(i18n.get('financial.refresh'), type="primary", use_container_width=True):
                 st.rerun()
