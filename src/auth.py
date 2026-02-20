@@ -30,7 +30,7 @@ class Authentication:
         try:
             st.markdown("""
             <style>
-            /* Conteneur du logo en haut à gauche */
+            /* Logo en haut à gauche */
             .logo-container {
                 position: absolute;
                 top: 20px;
@@ -45,15 +45,18 @@ class Authentication:
                 position: relative;
             }
             .block-container {
-                max-width: 500px !important;
-                text-align: center !important;
-                padding: 2rem !important;
+                width: 100%;
+                max-width: 1000px; /* Augmentez ou supprimez selon vos préférences */
+                text-align: center;
+                padding: 2rem;
             }
-            .stTextInput, .stButton {
-                margin: 0 auto !important;
+            .stTextInput > div, .stButton > button {
+                width: 100%;
+                max-width: 400px;
+                margin: 0 auto;
             }
             hr {
-                margin: 20px auto !important;
+                margin: 20px auto;
             }
             </style>
             """, unsafe_allow_html=True)
