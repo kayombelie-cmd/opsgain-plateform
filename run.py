@@ -8,7 +8,7 @@ import os
 def main():
     """Fonction principale."""
     print("=" * 60)
-    print("🚀 OPSGAIN PLATFORM/PORT SEC INTELLIGENT")
+    print("🚀 OPSGAIN PLATFORM/PORT INTELLIGENT")
     print("=" * 60)
     
     # Vérification de l'environnement
