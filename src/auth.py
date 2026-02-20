@@ -52,8 +52,12 @@ class Authentication:
             """, unsafe_allow_html=True)
 
             st.markdown('<div class="block-container">', unsafe_allow_html=True)
-
-            st.markdown("<h1 style='text-align: center; font-size: 3.5rem; color: #3B82F6;'>🔐</h1>", unsafe_allow_html=True)
+            # Affichage du logo
+            try:
+                 st.image("assets/opsgain_logo.jpg", width=150)
+            except Exception:
+            # Fallback : emoji
+             st.markdown("<h1 style='text-align: center; font-size: 3.5rem; color: #3B82F6;'>🔐</h1>", unsafe_allow_html=True)
             st.markdown(f"<h2 style='text-align: center; color: #1E3A8A; font-size: 2.2rem; font-weight: 800;'>{i18n.get('auth.title')}</h2>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align: center; color: #10B981; font-size: 1.1rem; font-weight: 600;'>{i18n.get('auth.slogan')}</p>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align: center; color: #475569; font-size: 0.95rem;'><strong>{i18n.get('auth.description')}</strong></p>", unsafe_allow_html=True)

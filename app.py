@@ -333,18 +333,17 @@ def render_info_section():
 
 def render_header(period_name):
     col1, col2 = st.columns([1, 5])
-
     with col1:
         try:
-            st.image("assets/logo.png", width=80)
-        except:
+            # Tentative d'afficher le nouveau logo
+            st.image("assets/opsgain_logo.jpg", width=80)
+        except Exception:
+            # Fallback : logo généré avec PIL
             from PIL import Image, ImageDraw
             import io
-
             img = Image.new('RGB', (80, 80), color=COLORS['primary'])
             d = ImageDraw.Draw(img)
-            d.text((20, 35), "PSI", fill=(255, 255, 255))
-
+            d.text((20, 35), "OG", fill=(255, 255, 255))  # "OG" pour OpsGain
             buf = io.BytesIO()
             img.save(buf, format='PNG')
             buf.seek(0)
