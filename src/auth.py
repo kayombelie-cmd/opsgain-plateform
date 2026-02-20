@@ -2,7 +2,7 @@
 Gestion de l'authentification.
 """
 import streamlit as st
-
+import os
 from .config import DEFAULT_PASSWORD, APP_NAME, APP_VERSION
 from src.utils.i18n import i18n
 from .utils.logger import setup_logger
@@ -27,7 +27,7 @@ class Authentication:
 
     @staticmethod
     def render_login_page():
-        """Affiche la page de connexion."""
+        """Affiche la page de connexion avec logo centré."""
         try:
             st.markdown("""
             <style>
@@ -48,16 +48,29 @@ class Authentication:
                 hr {
                     margin: 20px auto !important;
                 }
+                .centered-image {
+                    display: flex;
+                    justify-content: center;
+                    margin-bottom: 20px;
+                }
             </style>
             """, unsafe_allow_html=True)
 
             st.markdown('<div class="block-container">', unsafe_allow_html=True)
-            # Affichage du logo
+
+              # --- LOGO EN HAUT À GAUCHE ---
             try:
-                 st.image("assets/opsgain_logo.jpg", width=150)
-            except Exception:
-            # Fallback : emoji
-             st.markdown("<h1 style='text-align: center; font-size: 3.5rem; color: #3B82F6;'>🔐</h1>", unsafe_allow_html=True)
+                 current_dir = os.path.dirname(os.path.abspath(__file__))
+                 logo_path = os.path.join(current_dir, "..", "assets", "opsgain_logo.jpg")
+                 if os.path.exists(logo_path):
+                      st.image(logo_path, width=200)  # Taille augmentée à 200px
+                 else:
+                      st.markdown("<h1 style='text-align: center; font-size: 3.5rem; color: #3B82F6;'>🔐</h1>", unsafe_allow_html=True)
+            except Exception as e:
+                 st.markdown(f"<p>Erreur chargement logo: {e}</p>", unsafe_allow_html=True)
+                 st.markdown("<h1 style='text-align: center; font-size: 3.5rem; color: #3B82F6;'>🔐</h1>", unsafe_allow_html=True)
+
+            # Titres et textes
             st.markdown(f"<h2 style='text-align: center; color: #1E3A8A; font-size: 2.2rem; font-weight: 800;'>{i18n.get('auth.title')}</h2>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align: center; color: #10B981; font-size: 1.1rem; font-weight: 600;'>{i18n.get('auth.slogan')}</p>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align: center; color: #475569; font-size: 0.95rem;'><strong>{i18n.get('auth.description')}</strong></p>", unsafe_allow_html=True)

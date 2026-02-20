@@ -336,18 +336,18 @@ def render_header(period_name):
     with col1:
         try:
             # Tentative d'afficher le nouveau logo
-            st.image("assets/opsgain_logo.jpg", width=80)
+            st.image("assets/opsgain_logo.jpg", width=150)
         except Exception:
             # Fallback : logo généré avec PIL
             from PIL import Image, ImageDraw
             import io
-            img = Image.new('RGB', (80, 80), color=COLORS['primary'])
+            img = Image.new('RGB', (90, 90), color=COLORS['primary'])
             d = ImageDraw.Draw(img)
             d.text((20, 35), "OG", fill=(255, 255, 255))  # "OG" pour OpsGain
             buf = io.BytesIO()
             img.save(buf, format='PNG')
             buf.seek(0)
-            st.image(buf, width=80)
+            st.image(buf, width=150)
 
     with col2:
         st.markdown(f'<h1 class="main-title">{i18n.get("app.title", APP_NAME)}</h1>', unsafe_allow_html=True)
