@@ -46,7 +46,6 @@ class Authentication:
             }
             .block-container {
                 width: 100%;
-                max-width: 1000px; /* Augmentez ou supprimez selon vos préférences */
                 text-align: center;
                 padding: 2rem;
             }
