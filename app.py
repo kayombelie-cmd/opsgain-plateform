@@ -706,17 +706,17 @@ def render_financial_module(financial_metrics, period_data):
 
     st.markdown("---")
 
-    st.markdown(f"#### {i18n.get('financial.details_expander')}")
+    st.markdown(f" {i18n.get('financial.details_expander')}")
 
     with st.expander(i18n.get('financial.show_details'), expanded=True):
-        st.markdown(f"### {i18n.get('financial.period_analyzed')}")
+        st.markdown(f" {i18n.get('financial.period_analyzed')}")
         st.markdown(f"{i18n.get('financial.from', date=period_summary['start_date'])}")
         st.markdown(f"{i18n.get('financial.to', date=period_summary['end_date'])}")
         st.markdown(f"{i18n.get('financial.days_count', days=period_summary['total_days'])}")
         st.markdown(f"{i18n.get('financial.data_hash', hash=PUBLIC_DATA_HASH)}")
         st.divider()
 
-        st.markdown(f"### {i18n.get('financial.gain_time')}")
+        st.markdown(f" {i18n.get('financial.gain_time')}")
 
         baseline_duration = st.session_state.baseline_duration
         avg_duration = period_summary['avg_duration']
@@ -732,18 +732,18 @@ def render_financial_module(financial_metrics, period_data):
         {i18n.get('financial.params')}
         - {i18n.get('financial.baseline_duration')}: {baseline_duration} {i18n.get('common.minutes')}
         - {i18n.get('financial.avg_duration')}: {avg_duration:.1f} {i18n.get('common.minutes')}
-        - {i18n.get('financial.hourly_cost')}: ${hourly_cost}/h
+        - {i18n.get('financial.hourly_cost')}: ${hourly_cost}$/h
         - {i18n.get('financial.total_operations')}: {total_ops:,} {i18n.get('common.operations')}
 
         {i18n.get('financial.calculation')}
         - {i18n.get('financial.savings_per_op')}: {time_saved_minutes:.1f} {i18n.get('common.minutes')} = {time_saved_hours:.3f} {i18n.get('common.hours')}
-        - {i18n.get('financial.gain_per_op')}: {time_saved_hours:.3f} h × ${hourly_cost}/h = **${gain_per_op:.2f}**
-        - {i18n.get('financial.total_gain')}: {total_ops:,} {i18n.get('common.operations')} × ${gain_per_op:.2f} = **${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}**
-        - {i18n.get('financial.daily_avg')}: **${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day')}**
+        - {i18n.get('financial.gain_per_op')}: {time_saved_hours:.3f} h × ${hourly_cost}$/h = ${gain_per_op:.2f}$
+        - {i18n.get('financial.total_gain')}: {total_ops:,} {i18n.get('common.operations')} × ${gain_per_op:.2f} = ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
+        - {i18n.get('financial.daily_avg')}: ${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day')}$
         """)
         st.divider()
 
-        st.markdown(f"### {i18n.get('financial.gain_errors')}")
+        st.markdown(f"{i18n.get('financial.gain_errors')}")
 
         baseline_error_rate = st.session_state.baseline_error_rate * 100
         current_error_rate = period_summary['error_rate']
@@ -756,17 +756,17 @@ def render_financial_module(financial_metrics, period_data):
         {i18n.get('financial.params')}
         - {i18n.get('financial.baseline_error_rate')}: {baseline_error_rate:.1f}%
         - {i18n.get('financial.current_error_rate')}: {current_error_rate:.1f}%
-        - {i18n.get('financial.error_cost')}: ${error_cost}
+        - {i18n.get('financial.error_cost')}: ${error_cost}$
         - {i18n.get('financial.total_operations')}: {total_ops:,} {i18n.get('common.operations')}
 
         {i18n.get('financial.calculation')}
-        - {i18n.get('financial.errors_avoided')}: ({baseline_error_rate:.1f}% - {current_error_rate:.1f}%) × {total_ops:,} = **{errors_avoided:.1f}** {i18n.get('common.errors')}
-        - {i18n.get('financial.total_gain')}: {errors_avoided:.1f} {i18n.get('common.errors')} × ${error_cost} = **${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}**
-        - {i18n.get('financial.daily_avg')}: **${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day')}**
+        - {i18n.get('financial.errors_avoided')}: ({baseline_error_rate:.1f}% - {current_error_rate:.1f}%) × {total_ops:,} = {errors_avoided:.1f} {i18n.get('common.errors')}
+        - {i18n.get('financial.total_gain')}: {errors_avoided:.1f} {i18n.get('common.errors')} × ${error_cost} = ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
+        - {i18n.get('financial.daily_avg')}: ${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day')}$
         """)
         st.divider()
 
-        st.markdown(f"### {i18n.get('financial.gain_maintenance')}")
+        st.markdown(f" {i18n.get('financial.gain_maintenance')}")
 
         maintenance_cost = 500
         maintenance_gain_period = financial_metrics.breakdown.get('maintenance_gain_period', 0)
@@ -779,12 +779,12 @@ def render_financial_module(financial_metrics, period_data):
         - {i18n.get('financial.maintenance_gain_total')}: ${maintenance_gain_period:,.2f}
 
         {i18n.get('financial.calculation')}
-        - {i18n.get('financial.total_gain')}: {maintenance_alerts} × ${maintenance_cost} = **${maintenance_gain_period:,.2f}**
-        - {i18n.get('financial.daily_avg')}: **${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day')}**
+        - {i18n.get('financial.total_gain')}: {maintenance_alerts} × ${maintenance_cost} = ${maintenance_gain_period:,.2f}$
+        - {i18n.get('financial.daily_avg')}: ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day')}$
         """)
         st.divider()
 
-        st.markdown(f"### {i18n.get('financial.gain_fuel')}")
+        st.markdown(f" {i18n.get('financial.gain_fuel')}")
 
         trucks_per_day = min(500, period_summary['avg_daily_operations'] * 0.3)
         fuel_saving = 1.5
@@ -799,36 +799,36 @@ def render_financial_module(financial_metrics, period_data):
         - {i18n.get('financial.days_analyzed')}: {period_summary['total_days']} {i18n.get('common.days')}
 
         {i18n.get('financial.calculation')}
-        - {i18n.get('financial.daily_fuel_gain')}: {trucks_per_day:.0f} × ${fuel_saving} = **${daily_fuel_gain:.2f}{i18n.get('common.per_day')}**
-        - {i18n.get('financial.total_fuel_gain')}: ${daily_fuel_gain:.2f}{i18n.get('common.per_day')} × {period_summary['total_days']} {i18n.get('common.days')} = **${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}**
+        - {i18n.get('financial.daily_fuel_gain')}: {trucks_per_day:.0f} × ${fuel_saving} = ${daily_fuel_gain:.2f}{i18n.get('common.per_day')}$
+        - {i18n.get('financial.total_fuel_gain')}: ${daily_fuel_gain:.2f}{i18n.get('common.per_day')} × {period_summary['total_days']} {i18n.get('common.days')} = ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
         """)
         st.divider()
 
-        st.markdown(f"### {i18n.get('financial.summary')}")
+        st.markdown(f" {i18n.get('financial.summary')}")
         st.markdown(f"""
         {i18n.get('financial.total_gains_period')}
-        - {i18n.get('financial.gain_time')}: **${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}**
-        - {i18n.get('financial.gain_errors')}: **${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}**
-        - {i18n.get('financial.gain_maintenance')}: **${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}**
-        - {i18n.get('financial.gain_fuel')}: **${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}**
+        - {i18n.get('financial.gain_time')}: ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}
+        - {i18n.get('financial.gain_errors')}: ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}
+        - {i18n.get('financial.gain_maintenance')}: ${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}
+        - {i18n.get('financial.gain_fuel')}: ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}
 
-        **{i18n.get('financial.total_period_gains')}:** **${financial_metrics.period_gains:,.2f}**
+        **{i18n.get('financial.total_period_gains')}:${financial_metrics.period_gains:,.2f}
 
         {i18n.get('financial.daily_averages')}
-        - {i18n.get('financial.gain_time')}: **${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day')}**
-        - {i18n.get('financial.gain_errors')}: **${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day')}**
-        - {i18n.get('financial.gain_maintenance')}: **${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day')}**
-        - {i18n.get('financial.gain_fuel')}: **${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}{i18n.get('common.per_day')}**
+        - {i18n.get('financial.gain_time')}: ${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day')}
+        - {i18n.get('financial.gain_errors')}: ${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day')}
+        - {i18n.get('financial.gain_maintenance')}: ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day')}
+        - {i18n.get('financial.gain_fuel')}: ${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}{i18n.get('common.per_day')}
 
-        **{i18n.get('financial.total_daily_gains')}:** **${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day')}**
+        {i18n.get('financial.total_daily_gains')}:${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day')}
 
         {i18n.get('financial.monthly_projection_detail', days=st.session_state.working_days)}
-        - **${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day')} × {st.session_state.working_days} {i18n.get('common.days')} = ${financial_metrics.monthly_projection:,.2f}**
+        - ${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day')} × {st.session_state.working_days} {i18n.get('common.days')} = ${financial_metrics.monthly_projection:,.2f}$
 
         {i18n.get('financial.your_commission_detail')}
-        - {i18n.get('financial.fixed_monthly')}: **${st.session_state.monthly_fixed:,.2f}**
-        - {i18n.get('financial.variable', rate=st.session_state.commission_rate*100)}: **${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}**
-        - {i18n.get('financial.total_commission')}: **${financial_metrics.your_commission_monthly:,.2f}**
+        - {i18n.get('financial.fixed_monthly')}: ${st.session_state.monthly_fixed:,.2f}
+        - {i18n.get('financial.variable', rate=st.session_state.commission_rate*100)}: ${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}
+        - {i18n.get('financial.total_commission')}: ${financial_metrics.your_commission_monthly:,.2f}
         """)
 
 

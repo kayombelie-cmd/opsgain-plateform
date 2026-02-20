@@ -51,4 +51,7 @@ data/cache/
 assets/generated/
 
 # .env.env
+<<<<<<< HEAD
 .env
+=======
+>>>>>>> 22d4b9c87b4fd6f2649cf9d67afe6f284fd1d272
