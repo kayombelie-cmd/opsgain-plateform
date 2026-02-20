@@ -27,58 +27,60 @@ class Authentication:
 
     @staticmethod
     def render_login_page():
-     st.markdown("""
-    <style>
-        /* Centrage global */
-        .stApp {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .block-container {
-            max-width: 500px !important;
-            text-align: center !important;
-            padding: 2rem !important;
-        }
-        .stTextInput, .stButton {
-            margin: 0 auto !important;
-        }
-        hr {
-            margin: 20px auto !important;
-        }
-        .login-footer, .login-security {
-            text-align: center;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+        """Affiche la page de connexion."""
+        try:
+            st.markdown("""
+            <style>
+                .stApp {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 100vh;
+                }
+                .block-container {
+                    max-width: 500px !important;
+                    text-align: center !important;
+                    padding: 2rem !important;
+                }
+                .stTextInput, .stButton {
+                    margin: 0 auto !important;
+                }
+                hr {
+                    margin: 20px auto !important;
+                }
+            </style>
+            """, unsafe_allow_html=True)
 
-    st.markdown('<div class="block-container">', unsafe_allow_html=True)
+            st.markdown('<div class="block-container">', unsafe_allow_html=True)
 
-    st.markdown("<h1 style='text-align: center; font-size: 3.5rem; color: #3B82F6;'>🔐</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h2 style='text-align: center; color: #1E3A8A; font-size: 2.2rem; font-weight: 800;'>{i18n.get('auth.title')}</h2>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: #10B981; font-size: 1.1rem; font-weight: 600;'>{i18n.get('auth.slogan')}</p>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: #475569; font-size: 0.95rem;'><strong>{i18n.get('auth.description')}</strong></p>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: #6B7280; font-size: 0.8rem; margin-bottom: 20px;'>📊 {i18n.get('app.subtitle')} • 🚀 {APP_VERSION} • 📅 Données 2026</p>", unsafe_allow_html=True)
+            st.markdown("<h1 style='text-align: center; font-size: 3.5rem; color: #3B82F6;'>🔐</h1>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='text-align: center; color: #1E3A8A; font-size: 2.2rem; font-weight: 800;'>{i18n.get('auth.title')}</h2>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align: center; color: #10B981; font-size: 1.1rem; font-weight: 600;'>{i18n.get('auth.slogan')}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align: center; color: #475569; font-size: 0.95rem;'><strong>{i18n.get('auth.description')}</strong></p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align: center; color: #6B7280; font-size: 0.8rem; margin-bottom: 20px;'>📊 {i18n.get('app.subtitle')} • 🚀 {APP_VERSION} • 📅 Données 2026</p>", unsafe_allow_html=True)
 
-    st.divider()
+            st.divider()
 
-    password = st.text_input(
-        i18n.get('auth.password_label'),
-        type="password",
-        label_visibility="collapsed",
-        placeholder=i18n.get('auth.password_label')
-    )
+            password = st.text_input(
+                i18n.get('auth.password_label'),
+                type="password",
+                label_visibility="collapsed",
+                placeholder=i18n.get('auth.password_label')
+            )
 
-    if st.button(i18n.get('auth.button_access'), type="primary", use_container_width=True):
-        if password == DEFAULT_PASSWORD:
-            st.session_state.authenticated = True
-            st.rerun()
-        else:
-            st.error(i18n.get('auth.wrong_password'))
+            if st.button(i18n.get('auth.button_access'), type="primary", use_container_width=True):
+                if password == DEFAULT_PASSWORD:
+                    st.session_state.authenticated = True
+                    st.rerun()
+                else:
+                    st.error(i18n.get('auth.wrong_password'))
 
-    st.divider()
-    st.markdown("<p style='text-align: center; color: #6B7280; font-size: 0.85rem;'>© 2026 OpsGain Technologies • Tous droits réservés</p>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: #9CA3AF; font-size: 0.75rem; margin-top: 10px;'>{i18n.get('app.footer')}</p>", unsafe_allow_html=True)
+            st.divider()
+            st.markdown("<p style='text-align: center; color: #6B7280; font-size: 0.85rem;'>© 2026 OpsGain Technologies • Tous droits réservés</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align: center; color: #9CA3AF; font-size: 0.75rem; margin-top: 10px;'>{i18n.get('app.footer')}</p>", unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        except Exception as e:
+            st.error(f"Erreur dans la page de connexion : {e}")
+            st.exception(e)
