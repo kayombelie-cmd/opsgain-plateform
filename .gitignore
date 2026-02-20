@@ -51,3 +51,4 @@ data/cache/
 assets/generated/
 
 # .env.env
+.env
