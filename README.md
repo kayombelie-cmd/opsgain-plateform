@@ -1,4 +1,4 @@
-# 🚀 OPSGAIN PLATFORM / PORT SEC INTELLIGENT
+# 🚀 OPSGAIN PLATFORM / PORT INTELLIGENT
 
 **La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel.**
 
@@ -29,4 +29,5 @@ cd portsec-intelligent
 pip install -r requirements.txt
 
 # 3. Lancez l'application
+
 python run.py
