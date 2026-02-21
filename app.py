@@ -6,7 +6,7 @@ import streamlit as st
 # ⚠️ set_page_config en PREMIER
 st.set_page_config(
     page_title="OpsGain Platform / Port Intelligent",
-    page_icon="🚛",
+    page_icon="assets/opsgain_logo.jpg",  # ← chemin relatif vers votre logo
     layout="wide",
     initial_sidebar_state="expanded"
 )
