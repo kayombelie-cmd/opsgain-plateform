@@ -351,8 +351,8 @@ def render_header(period_name):
 
     with col2:
         st.markdown(f'<h1 class="main-title">{i18n.get("app.title", APP_NAME)}</h1>', unsafe_allow_html=True)
-        st.markdown(f"**Dashboard opérationnel synchronisé | Période: {period_name} | Données Simulées 2026**")
-        st.markdown("**Vos Operations Nos Gains. | La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel.**")
+        st.markdown(f"{i18n.get('header.subtitle')} | {i18n.get('common.period')}: {period_name} | {i18n.get('header.simulated_data')}")
+        st.markdown(f"{i18n.get('header.slogan')}")
 
     UIComponents.render_sync_badge()
     st.markdown("---")

@@ -1,9 +1,17 @@
 {
-  "app": {
-    "title": "OPSGAIN PLATFORM / INTELLIGENT DRY PORT",
+  "header": {
     "subtitle": "Synchronized operational dashboard",
-    "description": "The platform that transforms your operational data into verifiable financial gains in real time.",
-    "footer": "OPSGAIN PLATFORM v3.0 - Synchronized data"
+    "slogan": "Your Operations Our Gains. | The platform that transforms your operational data into verifiable financial gains in real time.",
+    "simulated_data": "Simulated Data 2026"
+  },
+  "common": {
+    "period": "Period",
+    "and": "and",
+    "per_day": "/day",
+    "minutes": "min",
+    "hours": "h",
+    "errors": "errors",
+    "operations": "operations"
   },
   "auth": {
     "title": "OPSGAIN PLATFORM",
@@ -14,7 +22,7 @@
     "wrong_password": "❌ Incorrect password"
   },
   "sidebar": {
-    "title": "OPSGAIN PLATFORM / INTELLIGENT DRY PORT",
+    "title": "OPSGAIN PLATFORM / INTELLIGENT PORT",
     "demo_button": "🚀 Launch full demonstration",
     "period_analysis": "📅 ANALYSIS PERIOD",
     "select_period": "Select period",
@@ -156,13 +164,5 @@
     "optimize_zone": "**Optimize {zone}** : {urgences} urgent operations detected",
     "maintenance": "**Maintenance {equip}** : Error rate: {rate}%",
     "load_balancing": "**Load balancing** : Move operations from {peak}h to {offpeak}h"
-  },
-  "common": {
-    "and": "and",
-    "per_day": "/day",
-    "minutes": "min",
-    "hours": "h",
-    "errors": "errors",
-    "operations": "operations"
   }
 }

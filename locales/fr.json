@@ -1,9 +1,17 @@
 {
-  "app": {
-    "title": "OPSGAIN PLATFORM / PORT SEC INTELLIGENT",
+  "header": {
     "subtitle": "Dashboard opérationnel synchronisé",
-    "description": "La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel.",
-    "footer": "OPSGAIN PLATFORM v3.0 - Données synchronisées"
+    "slogan": "Vos Operations Nos Gains. | La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel.",
+    "simulated_data": "Données Simulées 2026"
+  },
+  "common": {
+    "period": "Période",
+    "and": "et",
+    "per_day": "/jour",
+    "minutes": "min",
+    "hours": "h",
+    "errors": "erreurs",
+    "operations": "opérations"
   },
   "auth": {
     "title": "OPSGAIN PLATFORM",
@@ -14,7 +22,7 @@
     "wrong_password": "❌ Mot de passe incorrect"
   },
   "sidebar": {
-    "title": "OPSGAIN PLATFORM / PORT SEC INTELLIGENT",
+    "title": "OPSGAIN PLATFORM / PORT INTELLIGENT",
     "demo_button": "🚀 Lancer la démonstration complète",
     "period_analysis": "📅 PÉRIODE D'ANALYSE",
     "select_period": "Sélectionner la période",
@@ -156,13 +164,5 @@
     "optimize_zone": "**Optimiser {zone}** : {urgences} urgences détectées",
     "maintenance": "**Maintenance {equip}** : Taux erreur: {rate}%",
     "load_balancing": "**Équilibrage charge** : Déplacer des opérations de {peak}h vers {offpeak}h"
-  },
-  "common": {
-    "and": "et",
-    "per_day": "/jour",
-    "minutes": "min",
-    "hours": "h",
-    "errors": "erreurs",
-    "operations": "opérations"
   }
 }
