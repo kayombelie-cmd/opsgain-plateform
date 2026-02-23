@@ -66,7 +66,7 @@ class Authentication:
                 current_dir = os.path.dirname(os.path.abspath(__file__))
                 logo_path = os.path.join(current_dir, "..", "assets", "opsgain_logo.jpg")
                 if os.path.exists(logo_path):
-                    st.image(logo_path, width=200)  # Agrandi à 200px
+                    st.image(logo_path, width=100)  # Agrandi à 100px
                 else:
                     st.markdown("<h1 style='color: #3B82F6; font-size: 3rem;'>🔐</h1>", unsafe_allow_html=True)
             except Exception as e:
