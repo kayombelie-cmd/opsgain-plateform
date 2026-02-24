@@ -1,4 +1,7 @@
 {
+  "app": {
+    "title": "OPSGAIN PLATFORM / INTELLIGENT PORT"  
+  },
   "header": {
     "subtitle": "Synchronized operational dashboard",
     "slogan": "Your Operations Our Gains. | The platform that transforms your operational data into verifiable financial gains in real time.",
