@@ -329,7 +329,9 @@ def render_info_section():
     st.markdown(i18n.get('sidebar.data_hash', hash=PUBLIC_DATA_HASH))
     st.markdown(i18n.get('sidebar.developer'))
     st.markdown(i18n.get('sidebar.access_status'))
-
+    # Ajout du mode de données
+    mode = "📡 **Données réelles**" if USE_REAL_DATA else "🧪 **Données simulées**"
+    st.markdown(mode)
 
 def render_header(period_name):
     col1, col2 = st.columns([1, 5])
@@ -691,18 +693,23 @@ def render_financial_module(financial_metrics, period_data):
         """)
 
         col_btn1, col_btn2 = st.columns(2)
-        with col_btn1:
-            if st.button(i18n.get('financial.export_report'), type="secondary", use_container_width=True):
-                # Si le module d'export existe, on l'utilise, sinon message simple
-                if generate_excel_report is not None:
-                    # generate_excel_report(period_data, financial_metrics)  # à implémenter
-                    st.success(i18n.get('financial.report_generated'))
-                else:
-                    st.info("Fonction d'export non disponible (module manquant)")
-        with col_btn2:
-            if st.button(i18n.get('financial.refresh'), type="primary", use_container_width=True):
-                st.rerun()
+    with col_btn1:
+        if st.button(i18n.get('financial.export_report'), type="secondary", use_container_width=True):
+           if generate_excel_report is not None:
+            excel_data = generate_excel_report(period_data, financial_metrics)
+            st.download_button(
+                label="📥 Télécharger le rapport",
+                data=excel_data,
+                file_name=f"rapport_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="download_excel"
+            )
+        else:
+            st.info("Fonction d'export non disponible (module manquant)")
 
+    with col_btn2:
+     if st.button(i18n.get('financial.refresh'), type="primary", use_container_width=True):
+        st.rerun()
     st.markdown("---")
 
     st.markdown(f" {i18n.get('financial.details_expander')}")
