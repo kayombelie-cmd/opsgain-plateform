@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv  # Pour charger le fichier .env en local
 from src.utils.i18n import i18n
 from .utils.logger import setup_logger
-
+from src.config import APP_NAME, APP_VERSION 
 logger = setup_logger(__name__)
 
 # Charger les variables d'environnement depuis .env (si on est en local)
