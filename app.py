@@ -6,7 +6,7 @@ import streamlit as st
 # ⚠️ set_page_config en PREMIER
 st.set_page_config(
     page_title="OpsGain Platform / Port Intelligent",
-    page_icon="assets/opsgain_logo.jpg",  # ← chemin relatif vers votre logo
+    page_icon="assets/opsgain_logo.jpg",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -32,7 +32,6 @@ try:
     from src.utils.exports import generate_excel_report
 except ImportError:
     generate_excel_report = None
-    # Optionnel : logger un avertissement
     print("⚠️ Module src.utils.exports non trouvé – fonction d'export désactivée.")
 
 # Configuration du logger
@@ -48,7 +47,9 @@ def main():
 
         # Authentification
         Authentication.check_auth()
-
+         # Initialiser le rôle si absent (par sécurité)
+        if 'role' not in st.session_state:
+            st.session_state.role = 'user'   # rôle par défaut
         # CSS
         st.markdown(UIComponents.style_css(), unsafe_allow_html=True)
 
@@ -76,18 +77,22 @@ def main():
         render_realtime_map(map_gen)
         render_alerts_and_activity(period_data)
         render_recommendations(period_data)
-        render_financial_module(financial_metrics, period_data)
+
+        # Module financier réservé à l'administrateur
+        if st.session_state.get('role') == 'admin':
+            render_financial_module(financial_metrics, period_data)
+        else:
+            st.info("🔒 Le module financier détaillé est réservé à l'administrateur.")
+
         render_footer(financial_metrics, period_data.period_name)
 
     except Exception as e:
         st.error(f"Une erreur est survenue : {e}")
-        st.exception(e)  # Affiche la trace complète
+        st.exception(e)
 
 
 # ------------------------------------------------------------------------------
-# Toutes vos fonctions de rendu (render_sidebar, handle_period_selection, ...)
-# sont identiques à celles que vous avez fournies. Je ne les recopie pas ici
-# pour éviter la répétition, mais elles doivent être conservées telles quelles.
+# Fonctions de rendu (sidebar, header, etc.)
 # ------------------------------------------------------------------------------
 
 def render_sidebar(data_sync):
@@ -151,8 +156,13 @@ def render_sidebar(data_sync):
             i18n.set_language(language)
             st.rerun()
         
-        # Paramètres financiers, synchronisation, infos...
-        render_financial_params()
+        # Paramètres financiers – réservés aux admins
+        if st.session_state.get('role') == 'admin':
+            render_financial_params()
+        else:
+            st.markdown("---")
+            st.info("Les paramètres financiers sont réservés à l'administrateur.")
+
         render_sync_section(data_sync)
         render_info_section()
 
@@ -274,9 +284,7 @@ def render_financial_params():
 
 def init_financial_params():
     from src.config import FINANCIAL_PARAMS
-
     defaults = FINANCIAL_PARAMS.copy()
-
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
@@ -290,16 +298,10 @@ def render_sync_section(data_sync):
     st.markdown("---")
     st.markdown(f"### {i18n.get('sidebar.data_sync')}")
     
-    # Texte par défaut si la traduction est absente
     default_sync_info = f"**Hash des données :** `{PUBLIC_DATA_HASH}`\n\n**Pour partager les mêmes données :**\n1. Configurez la période ci-dessus\n2. Générez le lien de partage\n3. Envoyez-le à vos collaborateurs"
-
-    # Récupération du texte traduit (ou défaut)
     sync_info_text = i18n.get('sidebar.sync_info', default=default_sync_info)
-
-    # Si le texte contient un marqueur {hash}, on le remplace
     if '{hash}' in sync_info_text:
         sync_info_text = sync_info_text.format(hash=PUBLIC_DATA_HASH)
-
     st.info(sync_info_text)
     
     if st.button(i18n.get('sidebar.generate_link'), use_container_width=True, type="secondary"):
@@ -329,23 +331,21 @@ def render_info_section():
     st.markdown(i18n.get('sidebar.data_hash', hash=PUBLIC_DATA_HASH))
     st.markdown(i18n.get('sidebar.developer'))
     st.markdown(i18n.get('sidebar.access_status'))
-    # Ajout du mode de données
     mode = "📡 **Données réelles**" if USE_REAL_DATA else "🧪 **Données simulées**"
     st.markdown(mode)
+
 
 def render_header(period_name):
     col1, col2 = st.columns([1, 5])
     with col1:
         try:
-            # Tentative d'afficher le nouveau logo
             st.image("assets/opsgain_logo.jpg", width=150)
         except Exception:
-            # Fallback : logo généré avec PIL
             from PIL import Image, ImageDraw
             import io
             img = Image.new('RGB', (90, 90), color=COLORS['primary'])
             d = ImageDraw.Draw(img)
-            d.text((20, 35), "OG", fill=(255, 255, 255))  # "OG" pour OpsGain
+            d.text((20, 35), "OG", fill=(255, 255, 255))
             buf = io.BytesIO()
             img.save(buf, format='PNG')
             buf.seek(0)
@@ -362,12 +362,10 @@ def render_header(period_name):
     if st.session_state.get('demo_launched', False):
         progress_bar = st.progress(0)
         status_text = st.empty()
-
         for i in range(101):
             progress_bar.progress(i)
             status_text.text(f"Analyse des données en cours... {i}%")
             time.sleep(0.02)
-
         progress_bar.empty()
         status_text.empty()
         st.balloons()
@@ -506,7 +504,6 @@ def render_alerts_and_activity(period_data):
     with col1:
         st.markdown(f"#### {i18n.get('dashboard.active_alerts')}")
         alerts = []
-        # Détection d'alertes
         if not period_data.daily_data.empty and len(period_data.daily_data) > 1:
             latest_day = period_data.daily_data.iloc[-1]
             avg_operations = period_data.daily_data['nb_operations'].mean()
@@ -582,7 +579,6 @@ def render_financial_module(financial_metrics, period_data):
 
     period_summary = financial_metrics.period_summary
     st.markdown(f"#### {i18n.get('financial.analysis_for', period=period_data.period_name.upper())}")
-
     UIComponents.render_period_summary(period_summary)
 
     st.markdown(f"""
@@ -638,13 +634,13 @@ def render_financial_module(financial_metrics, period_data):
     col_graphique, col_resume = st.columns([3, 2])
 
     with col_graphique:
-        st.markdown(f"#### {i18n.get('financial.pie_chart_title')}")
+        st.markdown(f"{i18n.get('financial.pie_chart_title')}")
         chart_gen = ChartGenerator()
         fig_fin = chart_gen.create_financial_pie_chart(financial_metrics.breakdown)
         st.plotly_chart(fig_fin, use_container_width=True)
 
     with col_resume:
-        st.markdown(f"#### {i18n.get('financial.contract_summary')}")
+        st.markdown(f" {i18n.get('financial.contract_summary')}")
 
         st.markdown('''
         <div style="
@@ -693,23 +689,25 @@ def render_financial_module(financial_metrics, period_data):
         """)
 
         col_btn1, col_btn2 = st.columns(2)
-    with col_btn1:
-        if st.button(i18n.get('financial.export_report'), type="secondary", use_container_width=True):
-           if generate_excel_report is not None:
-            excel_data = generate_excel_report(period_data, financial_metrics)
-            st.download_button(
-                label="📥 Télécharger le rapport",
-                data=excel_data,
-                file_name=f"rapport_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="download_excel"
-            )
-        else:
-            st.info("Fonction d'export non disponible (module manquant)")
 
-    with col_btn2:
-     if st.button(i18n.get('financial.refresh'), type="primary", use_container_width=True):
-        st.rerun()
+        with col_btn1:
+            if st.button(i18n.get('financial.export_report'), type="secondary", use_container_width=True):
+                if generate_excel_report is not None:
+                    excel_data = generate_excel_report(period_data, financial_metrics)
+                    st.download_button(
+                        label="📥 Télécharger le rapport",
+                        data=excel_data,
+                        file_name=f"rapport_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        key="download_excel"
+                    )
+                
+                    
+
+        with col_btn2:
+            if st.button(i18n.get('financial.refresh'), type="primary", use_container_width=True):
+                st.rerun()
+
     st.markdown("---")
 
     st.markdown(f" {i18n.get('financial.details_expander')}")
@@ -722,7 +720,7 @@ def render_financial_module(financial_metrics, period_data):
         st.markdown(f"{i18n.get('financial.data_hash', hash=PUBLIC_DATA_HASH)}")
         st.divider()
 
-        st.markdown(f" {i18n.get('financial.gain_time')}")
+        st.markdown(f"### {i18n.get('financial.gain_time')}")
 
         baseline_duration = st.session_state.baseline_duration
         avg_duration = period_summary['avg_duration']
@@ -749,7 +747,7 @@ def render_financial_module(financial_metrics, period_data):
         """)
         st.divider()
 
-        st.markdown(f"{i18n.get('financial.gain_errors')}")
+        st.markdown(f" {i18n.get('financial.gain_errors')}")
 
         baseline_error_rate = st.session_state.baseline_error_rate * 100
         current_error_rate = period_summary['error_rate']
@@ -772,7 +770,7 @@ def render_financial_module(financial_metrics, period_data):
         """)
         st.divider()
 
-        st.markdown(f" {i18n.get('financial.gain_maintenance')}")
+        st.markdown(f"{i18n.get('financial.gain_maintenance')}")
 
         maintenance_cost = 500
         maintenance_gain_period = financial_metrics.breakdown.get('maintenance_gain_period', 0)
@@ -781,8 +779,8 @@ def render_financial_module(financial_metrics, period_data):
         st.markdown(f"""
         {i18n.get('financial.params')}
         - {i18n.get('financial.maintenance_alerts')}: {maintenance_alerts} {i18n.get('common.alerts')}
-        - {i18n.get('financial.maintenance_cost_per_alert')}: ${maintenance_cost}
-        - {i18n.get('financial.maintenance_gain_total')}: ${maintenance_gain_period:,.2f}
+        - {i18n.get('financial.maintenance_cost_per_alert')}: ${maintenance_cost}$
+        - {i18n.get('financial.maintenance_gain_total')}: ${maintenance_gain_period:,.2f}$
 
         {i18n.get('financial.calculation')}
         - {i18n.get('financial.total_gain')}: {maintenance_alerts} × ${maintenance_cost} = ${maintenance_gain_period:,.2f}$
@@ -790,7 +788,7 @@ def render_financial_module(financial_metrics, period_data):
         """)
         st.divider()
 
-        st.markdown(f" {i18n.get('financial.gain_fuel')}")
+        st.markdown(f"### {i18n.get('financial.gain_fuel')}")
 
         trucks_per_day = min(500, period_summary['avg_daily_operations'] * 0.3)
         fuel_saving = 1.5
@@ -810,31 +808,31 @@ def render_financial_module(financial_metrics, period_data):
         """)
         st.divider()
 
-        st.markdown(f" {i18n.get('financial.summary')}")
+        st.markdown(f"{i18n.get('financial.summary')}")
         st.markdown(f"""
         {i18n.get('financial.total_gains_period')}
-        - {i18n.get('financial.gain_time')}: ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}
-        - {i18n.get('financial.gain_errors')}: ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}
-        - {i18n.get('financial.gain_maintenance')}: ${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}
-        - {i18n.get('financial.gain_fuel')}: ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}
+        - {i18n.get('financial.gain_time')}: ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
+        - {i18n.get('financial.gain_errors')}: ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
+        - {i18n.get('financial.gain_maintenance')}: ${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}$
+        - {i18n.get('financial.gain_fuel')}: ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
 
-        **{i18n.get('financial.total_period_gains')}:${financial_metrics.period_gains:,.2f}
+        {i18n.get('financial.total_period_gains')}: ${financial_metrics.period_gains:,.2f}$
 
         {i18n.get('financial.daily_averages')}
-        - {i18n.get('financial.gain_time')}: ${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day')}
-        - {i18n.get('financial.gain_errors')}: ${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day')}
-        - {i18n.get('financial.gain_maintenance')}: ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day')}
-        - {i18n.get('financial.gain_fuel')}: ${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}{i18n.get('common.per_day')}
+        - {i18n.get('financial.gain_time')}: ${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day')}$
+        - {i18n.get('financial.gain_errors')}: ${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day')}$
+        - {i18n.get('financial.gain_maintenance')}: ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day')}$
+        - {i18n.get('financial.gain_fuel')}: ${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}{i18n.get('common.per_day')}$
 
-        {i18n.get('financial.total_daily_gains')}:${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day')}
+        {i18n.get('financial.total_daily_gains')}: ${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day')}$
 
         {i18n.get('financial.monthly_projection_detail', days=st.session_state.working_days)}
         - ${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day')} × {st.session_state.working_days} {i18n.get('common.days')} = ${financial_metrics.monthly_projection:,.2f}$
 
         {i18n.get('financial.your_commission_detail')}
-        - {i18n.get('financial.fixed_monthly')}: ${st.session_state.monthly_fixed:,.2f}
-        - {i18n.get('financial.variable', rate=st.session_state.commission_rate*100)}: ${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}
-        - {i18n.get('financial.total_commission')}: ${financial_metrics.your_commission_monthly:,.2f}
+        - {i18n.get('financial.fixed_monthly')}: ${st.session_state.monthly_fixed:,.2f}$
+        - {i18n.get('financial.variable', rate=st.session_state.commission_rate*100)}: ${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}$
+        - {i18n.get('financial.total_commission')}: ${financial_metrics.your_commission_monthly:,.2f}$
         """)
 
 

@@ -83,6 +83,13 @@ class Authentication:
 
             st.divider()
 
+            # Sélecteur de rôle
+            role = st.selectbox(
+                "Choisissez votre profil",
+                options=["Administrateur", "Utilisateur"],
+                key="role_select"
+            )
+
             password = st.text_input(
                 i18n.get('auth.password_label'),
                 type="password",
@@ -93,6 +100,7 @@ class Authentication:
             if st.button(i18n.get('auth.button_access'), type="primary", use_container_width=True):
                 if password == DEFAULT_PASSWORD:
                     st.session_state.authenticated = True
+                    st.session_state.role = "admin" if role == "Administrateur" else "user"
                     st.rerun()
                 else:
                     st.error(i18n.get('auth.wrong_password'))
