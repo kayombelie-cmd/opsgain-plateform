@@ -3,12 +3,14 @@ Gestion de l'authentification.
 """
 import streamlit as st
 import os
-from .config import DEFAULT_PASSWORD, APP_NAME, APP_VERSION
+from dotenv import load_dotenv  # Pour charger le fichier .env en local
 from src.utils.i18n import i18n
 from .utils.logger import setup_logger
 
 logger = setup_logger(__name__)
 
+# Charger les variables d'environnement depuis .env (si on est en local)
+load_dotenv()
 
 class Authentication:
     """Gestionnaire d'authentification."""
@@ -24,6 +26,25 @@ class Authentication:
             st.stop()
         else:
             logger.info("Utilisateur authentifié")
+
+    @staticmethod
+    def _get_password(role_key):
+        """
+        Récupère le mot de passe pour un rôle donné.
+        Priorité : 1. Streamlit Secrets, 2. Variables d'environnement.
+        """
+        try:
+            # Streamlit Cloud : on utilise st.secrets
+            if role_key == "admin":
+                return st.secrets["ADMIN_PASSWORD"]
+            else:
+                return st.secrets["USER_PASSWORD"]
+        except (KeyError, AttributeError):
+            # En local : on utilise les variables d'environnement
+            if role_key == "admin":
+                return os.getenv("ADMIN_PASSWORD")
+            else:
+                return os.getenv("USER_PASSWORD")
 
     @staticmethod
     def render_login_page():
@@ -66,7 +87,7 @@ class Authentication:
                 current_dir = os.path.dirname(os.path.abspath(__file__))
                 logo_path = os.path.join(current_dir, "..", "assets", "opsgain_logo.jpg")
                 if os.path.exists(logo_path):
-                    st.image(logo_path, width=100)  # Agrandi à 100px
+                    st.image(logo_path, width=100)
                 else:
                     st.markdown("<h1 style='color: #3B82F6; font-size: 3rem;'>🔐</h1>", unsafe_allow_html=True)
             except Exception as e:
@@ -98,9 +119,19 @@ class Authentication:
             )
 
             if st.button(i18n.get('auth.button_access'), type="primary", use_container_width=True):
-                if password == DEFAULT_PASSWORD:
+                # Récupérer le mot de passe attendu selon le rôle
+                if role == "Administrateur":
+                    expected_password = Authentication._get_password("admin")
+                    role_key = "admin"
+                else:
+                    expected_password = Authentication._get_password("user")
+                    role_key = "user"
+
+                if expected_password is None:
+                    st.error("Erreur de configuration : mots de passe non définis.")
+                elif password == expected_password:
                     st.session_state.authenticated = True
-                    st.session_state.role = "admin" if role == "Administrateur" else "user"
+                    st.session_state.role = role_key
                     st.rerun()
                 else:
                     st.error(i18n.get('auth.wrong_password'))
