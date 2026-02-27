@@ -720,7 +720,7 @@ def render_financial_module(financial_metrics, period_data):
         st.markdown(f"{i18n.get('financial.data_hash', hash=PUBLIC_DATA_HASH)}")
         st.divider()
 
-        st.markdown(f"### {i18n.get('financial.gain_time')}")
+        st.markdown(f" {i18n.get('financial.gain_time')}")
 
         baseline_duration = st.session_state.baseline_duration
         avg_duration = period_summary['avg_duration']
@@ -788,7 +788,7 @@ def render_financial_module(financial_metrics, period_data):
         """)
         st.divider()
 
-        st.markdown(f"### {i18n.get('financial.gain_fuel')}")
+        st.markdown(f" {i18n.get('financial.gain_fuel')}")
 
         trucks_per_day = min(500, period_summary['avg_daily_operations'] * 0.3)
         fuel_saving = 1.5
@@ -798,7 +798,7 @@ def render_financial_module(financial_metrics, period_data):
 
         st.markdown(f"""
         {i18n.get('financial.params')}
-        - {i18n.get('financial.trucks_per_day')}: {trucks_per_day:.0f} {i18n.get('common.trucks')}
+        - {i18n.get('financial.trucks_per_day')}: {trucks_per_day:.0f} ${i18n.get('common.trucks')}$
         - {i18n.get('financial.fuel_saving_per_truck')}: ${fuel_saving}{i18n.get('common.per_day')}
         - {i18n.get('financial.days_analyzed')}: {period_summary['total_days']} {i18n.get('common.days')}
 
@@ -807,33 +807,35 @@ def render_financial_module(financial_metrics, period_data):
         - {i18n.get('financial.total_fuel_gain')}: ${daily_fuel_gain:.2f}{i18n.get('common.per_day')} × {period_summary['total_days']} {i18n.get('common.days')} = ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
         """)
         st.divider()
+               # Synthèse financière
+        st.markdown("---")
+        st.markdown(f" {i18n.get('financial.summary', '📊 SYNTHÈSE FINANCIÈRE')}")
 
-        st.markdown(f"{i18n.get('financial.summary')}")
-        st.markdown(f"""
-        {i18n.get('financial.total_gains_period')}
-        - {i18n.get('financial.gain_time')}: ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}$
-        - {i18n.get('financial.gain_errors')}: ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}$
-        - {i18n.get('financial.gain_maintenance')}: ${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}$
-        - {i18n.get('financial.gain_fuel')}: ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
+        # Gains totaux sur la période
+        st.markdown(f"{i18n.get('financial.total_gains_period', 'Gains totaux sur la période :')}")
+        st.markdown(f"- {i18n.get('financial.gain_time', '1. GAIN TEMPS')}: ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}")
+        st.markdown(f"- {i18n.get('financial.gain_errors', '2. GAIN ERREURS')}: ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}")
+        st.markdown(f"- {i18n.get('financial.gain_maintenance', '3. GAIN MAINTENANCE')}: ${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}")
+        st.markdown(f"- {i18n.get('financial.gain_fuel', '4. GAIN CARBURANT')}: ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}")
 
-        {i18n.get('financial.total_period_gains')}: ${financial_metrics.period_gains:,.2f}$
+        st.markdown(f"{i18n.get('financial.total_period_gains', 'Total des gains sur la période')}:${financial_metrics.period_gains:,.2f}")
 
-        {i18n.get('financial.daily_averages')}
-        - {i18n.get('financial.gain_time')}: ${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day')}$
-        - {i18n.get('financial.gain_errors')}: ${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day')}$
-        - {i18n.get('financial.gain_maintenance')}: ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day')}$
-        - {i18n.get('financial.gain_fuel')}: ${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}{i18n.get('common.per_day')}$
+        # Moyennes journalières
+        st.markdown(f"{i18n.get('financial.daily_averages', 'Moyennes journalières :')}")
+        st.markdown(f"- {i18n.get('financial.gain_time', '1. GAIN TEMPS')}: ${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}")
+        st.markdown(f"- {i18n.get('financial.gain_errors', '2. GAIN ERREURS')}: ${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}")
+        st.markdown(f"- {i18n.get('financial.gain_maintenance', '3. GAIN MAINTENANCE')}: ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}")
+        st.markdown(f"- {i18n.get('financial.gain_fuel', '4. GAIN CARBURANT')}: ${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}")
 
-        {i18n.get('financial.total_daily_gains')}: ${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day')}$
+        st.markdown(f"{i18n.get('financial.total_daily_gains', 'Total des gains journaliers')}: ${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day', '/jour')}")
 
-        {i18n.get('financial.monthly_projection_detail', days=st.session_state.working_days)}
-        - ${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day')} × {st.session_state.working_days} {i18n.get('common.days')} = ${financial_metrics.monthly_projection:,.2f}$
+        st.markdown(f"{i18n.get('financial.monthly_projection_detail', days=st.session_state.working_days)}")
+        st.markdown(f"- ${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day', '/jour')} × {st.session_state.working_days} {i18n.get('common.days', 'jours')} = ${financial_metrics.monthly_projection:,.2f}")
 
-        {i18n.get('financial.your_commission_detail')}
-        - {i18n.get('financial.fixed_monthly')}: ${st.session_state.monthly_fixed:,.2f}$
-        - {i18n.get('financial.variable', rate=st.session_state.commission_rate*100)}: ${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}$
-        - {i18n.get('financial.total_commission')}: ${financial_metrics.your_commission_monthly:,.2f}$
-        """)
+        st.markdown(f"{i18n.get('financial.your_commission_detail', 'Votre commission :')}")
+        st.markdown(f"- {i18n.get('financial.fixed_monthly', 'Fixe mensuel')}: ${st.session_state.monthly_fixed:,.2f}")
+        st.markdown(f"- {i18n.get('financial.variable', rate=st.session_state.commission_rate*100)}: ${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}")
+        st.markdown(f"- {i18n.get('financial.total_commission', 'Commission totale')}: ${financial_metrics.your_commission_monthly:,.2f}")
 
 
 def render_footer(financial_metrics, period_name):
