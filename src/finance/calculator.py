@@ -85,9 +85,11 @@ class FinancialCalculator:
         # Gain maintenance
         engins_data = period_data.engins_data
         if not engins_data.empty:
-            maintenance_alerts = len([e for e in engins_data['erreurs'] if e > 10])
+            taux_erreur = (engins_data['erreurs'] / engins_data['total_operations']) * 100
+            maintenance_alerts = len(taux_erreur[taux_erreur > 2.0])
         else:
             maintenance_alerts = 0
+
         
         maintenance_gain_total = maintenance_alerts * self._get_param('maintenance_alert_cost')
         maintenance_gain_daily = maintenance_gain_total / total_days if total_days > 0 else 0

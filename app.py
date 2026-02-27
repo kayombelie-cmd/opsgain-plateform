@@ -772,9 +772,9 @@ def render_financial_module(financial_metrics, period_data):
 
         st.markdown(f"{i18n.get('financial.gain_maintenance')}")
 
+        maintenance_alerts = financial_metrics.metrics.get('maintenance_alerts', 0)
         maintenance_cost = 500
         maintenance_gain_period = financial_metrics.breakdown.get('maintenance_gain_period', 0)
-        maintenance_alerts = int(maintenance_gain_period / maintenance_cost) if maintenance_cost > 0 else 0
 
         st.markdown(f"""
         {i18n.get('financial.params')}
