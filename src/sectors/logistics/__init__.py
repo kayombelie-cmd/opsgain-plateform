@@ -5,7 +5,7 @@ from .visualizations import get_visualizations
 from .data_simulator import generate_sample_data
 from ..base_sector import BaseSector
 
-class TelecomSector(BaseSector):
+class LogisticsSector(BaseSector):
     def transform(self, raw_data):
         return transform(raw_data)
 
