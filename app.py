@@ -200,28 +200,34 @@ def render_sidebar(data_sync):
             st.session_state.sector = selected_sector_key
             # Si on est en mode simulé, charger automatiquement les données
             if st.session_state.get('data_mode') == "Simulées":
-                sector = SectorFactory.get_sector(selected_sector_key)
-                if selected_sector_key == 'port':
-                    # Vérifier que les dates sont définies, sinon utiliser les valeurs par défaut
-                    if 'start_date' not in st.session_state or 'end_date' not in st.session_state:
-                        default_end = datetime.now()
-                        default_start = default_end - timedelta(days=30)
-                        st.session_state.start_date = default_start
-                        st.session_state.end_date = default_end
-                    period_data = data_sync.generator.create_period_data(
-                        st.session_state.start_date,
-                        st.session_state.end_date,
-                        use_current_time=True
-                    )
-                    if period_data is not None:
-                        st.session_state.period_data = period_data
-                        st.session_state.data_loaded = True
-                else:
-                    raw_data = sector.generate_sample_data(st.session_state.get('sim_days', 30))
-                    transformed_data = sector.transform(raw_data)
-                    st.session_state.data = transformed_data
-                    st.session_state.data_loaded = True
-                st.rerun()
+               # S'assurer que les dates sont définies
+               if 'start_date' not in st.session_state or 'end_date' not in st.session_state:
+                   default_end = datetime.now()
+                   default_start = default_end - timedelta(days=30)
+                   st.session_state.start_date = default_start
+                   st.session_state.end_date = default_end
+
+               sector = SectorFactory.get_sector(selected_sector_key)
+
+               if selected_sector_key == 'port':
+                  period_data = data_sync.generator.create_period_data(
+                      st.session_state.start_date,
+                      st.session_state.end_date,
+                      use_current_time=True
+                  )
+                  if period_data is not None:
+                      st.session_state.period_data = period_data
+                      st.session_state.data_loaded = True
+               else:
+                   # Générer les données simulées sur la période sélectionnée
+                   raw_data = sector.generate_sample_data(
+                       start_date=st.session_state.start_date,
+                       end_date=st.session_state.end_date
+                   )
+                   transformed_data = sector.transform(raw_data)
+                   st.session_state.data = transformed_data
+                   st.session_state.data_loaded = True
+               st.rerun()
 
         # Choix du mode de données
         data_mode = st.radio("Mode de données", ["Simulées", "Réelles"], key='data_mode')
@@ -254,8 +260,6 @@ def render_sidebar(data_sync):
                     st.session_state.connector_config = {'method': method}
         else:
             st.info("Données simulées générées automatiquement.")
-            days_sim = st.slider("Nombre de jours de simulation", 7, 90, 30)
-            st.session_state.sim_days = days_sim
 
         # Bouton de chargement
         if st.button("Charger les données", type="primary"):
@@ -278,7 +282,10 @@ def render_sidebar(data_sync):
                                 st.error("Échec de la génération des données simulées pour le port.")
                     else:
                         sector = SectorFactory.get_sector(sector_name)
-                        raw_data = sector.generate_sample_data(st.session_state.get('sim_days', 30))
+                        raw_data = sector.generate_sample_data(
+                        start_date=st.session_state.start_date,
+                        end_date=st.session_state.end_date
+                        )
                         transformed_data = sector.transform(raw_data)
                         st.session_state.data = transformed_data
                         st.session_state.data_loaded = True

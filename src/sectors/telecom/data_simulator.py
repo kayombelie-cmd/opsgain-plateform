@@ -2,31 +2,22 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-def generate_sample_data(days=30):
+def generate_sample_data(days: int = 30, start_date: datetime = None, end_date: datetime = None) -> pd.DataFrame:
     """
-    Génère un DataFrame simulé pour le secteur télécom.
-    Colonnes incluses :
-        - ticket_id : identifiant unique
-        - date_ouverture : date d'ouverture du ticket
-        - date : alias de date_ouverture (pour compatibilité)
-        - equipement : équipement concerné
-        - type_ticket : type d'incident/requête/maintenance
-        - urgence : niveau d'urgence (0,1,2)
-        - priorite : priorité (identique à urgence)
-        - categorie : catégorie (identique à type_ticket)
-        - duree_minutes : durée de résolution en minutes
-        - temps_resolution : temps de résolution (identique)
-        - sla_respecte : booléen (True si le SLA est respecté)
-        - resolution_a_distance : booléen (True si résolu à distance)
-        - intervention_terrain : booléen (True si intervention sur site)
-        - satisfaction_client : note de 1 à 5
-        - technicien : nom du technicien
+    Génère des données simulées.
+    Si start_date et end_date sont fournies, génère sur cette plage.
+    Sinon, génère sur 'days' jours à partir d'aujourd'hui.
     """
     np.random.seed(42)
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=days)
-    date_range = pd.date_range(start=start_date, end=end_date, freq='D')
-    
+
+    if start_date is not None and end_date is not None:
+        # Générer pour chaque jour entre start_date et end_date inclus
+        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+    else:
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+
     rows = []
     ticket_counter = 1
     for date in date_range:
@@ -44,11 +35,11 @@ def generate_sample_data(days=30):
             categorie = type_ticket
             technicien = np.random.choice(['Alice', 'Bob', 'Charlie', 'Diana'])
             equipement = np.random.choice(['Routeur A', 'Switch B', 'Antenne C', 'Fibre D'])
-            
+
             rows.append({
                 'ticket_id': ticket_counter,
-                'date_ouverture': date,   # ← ajouté
-                'date': date,              # ← conservé
+                'date_ouverture': date,
+                'date': date,
                 'equipement': equipement,
                 'type_ticket': type_ticket,
                 'urgence': urgence,
@@ -63,6 +54,5 @@ def generate_sample_data(days=30):
                 'technicien': technicien
             })
             ticket_counter += 1
-    
-    df = pd.DataFrame(rows)
-    return df
+
+    return pd.DataFrame(rows)

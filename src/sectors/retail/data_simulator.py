@@ -2,16 +2,27 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-def generate_sample_data(days=30):
+def generate_sample_data(days: int = 30, start_date: datetime = None, end_date: datetime = None) -> pd.DataFrame:
+    """
+    Génère des données simulées pour le secteur Retail.
+    Si start_date et end_date sont fournies, génère sur cette plage.
+    Sinon, génère sur 'days' jours à partir d'aujourd'hui.
+    """
     np.random.seed(44)
-    end = datetime.now()
-    start = end - timedelta(days=days)
+
+    if start_date is not None and end_date is not None:
+        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+    else:
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+
     magasins = ['Mag A', 'Mag B', 'Mag C']
     rayons = ['Alimentation', 'Électroménager', 'Textile', 'Hygiène']
     produits = [f'Produit-{i}' for i in range(1, 21)]
+
     data = []
-    for day in range(days):
-        date = start + timedelta(days=day)
+    for date in date_range:
         nb_trans = np.random.poisson(lam=200)
         for _ in range(nb_trans):
             rupture = np.random.rand() < 0.05  # 5% de ruptures

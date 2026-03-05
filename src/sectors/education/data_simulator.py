@@ -2,16 +2,27 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-def generate_sample_data(days=30):
+def generate_sample_data(days: int = 30, start_date: datetime = None, end_date: datetime = None) -> pd.DataFrame:
+    """
+    Génère des données simulées pour le secteur Éducation.
+    Si start_date et end_date sont fournies, génère sur cette plage.
+    Sinon, génère sur 'days' jours à partir d'aujourd'hui.
+    """
     np.random.seed(45)
-    end = datetime.now()
-    start = end - timedelta(days=days)
+
+    if start_date is not None and end_date is not None:
+        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+    else:
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+
     matieres = ['Mathématiques', 'Français', 'Histoire', 'Sciences', 'Anglais']
     enseignants = [f'Prof {m}' for m in matieres]
     classes = ['6ème A', '6ème B', '5ème A', '5ème B', '4ème', '3ème']
+
     data = []
-    for day in range(days):
-        date = start + timedelta(days=day)
+    for date in date_range:
         for matiere in matieres:
             for classe in classes[:2]:  # seulement quelques classes par jour
                 duree = np.random.choice([45, 60, 90])
