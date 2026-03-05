@@ -5,7 +5,7 @@ from .visualizations import get_visualizations
 from .data_simulator import generate_sample_data
 from ..base_sector import BaseSector
 
-class LogisticsSector(BaseSector):
+class TelecomSector(BaseSector):
     def transform(self, raw_data):
         return transform(raw_data)
 
@@ -18,5 +18,5 @@ class LogisticsSector(BaseSector):
     def get_visualizations(self, data):
         return get_visualizations(data)
 
-    def generate_sample_data(self, days=30):
-        return generate_sample_data(days)
+    def generate_sample_data(self, days=30, start_date=None, end_date=None):
+        return generate_sample_data(days, start_date, end_date)

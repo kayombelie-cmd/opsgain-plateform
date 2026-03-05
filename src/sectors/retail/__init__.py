@@ -18,5 +18,5 @@ class RetailSector(BaseSector):
     def get_visualizations(self, data):
         return get_visualizations(data)
 
-    def generate_sample_data(self, days=30):
-        return generate_sample_data(days)
+    def generate_sample_data(self, days=30, start_date=None, end_date=None):
+        return generate_sample_data(days, start_date, end_date)
