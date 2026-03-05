@@ -176,7 +176,7 @@ def render_sidebar(data_sync):
         else:
             period_key = "custom"
 
-        handle_period_selection(period_key, default_start, default_end)
+        handle_period_selection(period_key, default_start, default_end, data_sync)
 
         # --- Sélection du secteur et mode de données ---
         st.markdown("---")
@@ -343,7 +343,7 @@ def render_sidebar(data_sync):
         render_info_section()
 
 
-def handle_period_selection(period_key, default_start, default_end):
+def handle_period_selection(period_key, default_start, default_end, data_sync):
     if period_key == "custom":
         col1, col2 = st.columns(2)
         with col1:
@@ -361,6 +361,28 @@ def handle_period_selection(period_key, default_start, default_end):
         st.session_state.end_date = default_end
         period_name_key = f"periods.last_{days}_days"
         st.session_state.selected_period = i18n.get(period_name_key, f"{days} derniers jours")
+
+    # Rechargement automatique si en mode simulé et secteur défini
+    if st.session_state.get('data_mode') == "Simulées" and st.session_state.get('sector') is not None:
+        sector_name = st.session_state.sector
+        if sector_name == 'port':
+            period_data = data_sync.generator.create_period_data(
+                st.session_state.start_date,
+                st.session_state.end_date,
+                use_current_time=True
+            )
+            if period_data is not None:
+                st.session_state.period_data = period_data
+                st.session_state.data_loaded = True
+        else:
+            sector = SectorFactory.get_sector(sector_name)
+            raw_data = sector.generate_sample_data(
+                start_date=st.session_state.start_date,
+                end_date=st.session_state.end_date
+            )
+            transformed_data = sector.transform(raw_data)
+            st.session_state.data = transformed_data
+            st.session_state.data_loaded = True
 
 
 def render_filters():
