@@ -19,13 +19,14 @@ from streamlit_folium import st_folium
 # --- Imports de vos modules ---
 from src.utils.i18n import i18n
 from src.auth import Authentication
-from src.config import APP_NAME, APP_VERSION, PUBLIC_DATA_HASH, PERIODS, COLORS, FINANCIAL_PARAMS, USE_REAL_DATA
+from src.config import APP_NAME, APP_VERSION, PUBLIC_DATA_HASH, COLORS, USE_REAL_DATA
 from src.utils.logger import setup_logger
 from src.data.sync import DataSynchronizer
 from src.finance.calculator import FinancialCalculator
 from src.visualization.components import UIComponents
 from src.visualization.charts import ChartGenerator
 from src.visualization.maps import MapGenerator
+from src.sectors import SectorFactory
 
 # ⚠️ Import conditionnel de l'export Excel (s'il n'existe pas, on le met à None)
 try:
@@ -33,9 +34,6 @@ try:
 except ImportError:
     generate_excel_report = None
     print("⚠️ Module src.utils.exports non trouvé – fonction d'export désactivée.")
-
-# 🔧 Import de SectorFactory
-from src.sectors import SectorFactory
 
 # Configuration du logger
 logger = setup_logger(__name__)
@@ -47,6 +45,7 @@ def main():
         if 'language' not in st.session_state:
             st.session_state.language = 'fr'
         i18n.set_language(st.session_state.language)
+
         # Initialisation des variables de session
         if 'data_loaded' not in st.session_state:
             st.session_state.data_loaded = False
@@ -54,11 +53,11 @@ def main():
             st.session_state.data = None
         if 'period_data' not in st.session_state:
             st.session_state.period_data = None
-        # Authentification
-        Authentication.check_auth()
-        # Initialiser le rôle si absent (par sécurité)
         if 'role' not in st.session_state:
             st.session_state.role = 'user'   # rôle par défaut
+
+        # Authentification
+        Authentication.check_auth()
 
         # CSS
         st.markdown(UIComponents.style_css(), unsafe_allow_html=True)
@@ -74,69 +73,71 @@ def main():
 
         # --- Affichage conditionnel selon le secteur ---
         if st.session_state.get('data_loaded', False):
-            sector = st.session_state.sector
+            sector = st.session_state.get('sector', 'port')
 
             if sector == 'port':
-                # ---- Ancien tableau de bord (Port) ----
-                period_data = st.session_state.period_data  # on stocke l'objet PeriodData
-                financial_metrics = finance_calc.calculate(period_data)
+                # Vérifier que period_data existe et n'est pas None
+                period_data = st.session_state.get('period_data')
+                if period_data is not None:
+                    financial_metrics = finance_calc.calculate(period_data)
 
-                render_header(period_data.period_name)
-                render_operational_summary(period_data, financial_metrics)
-                render_performance_analysis(period_data, chart_gen)
-                render_equipment_performance(period_data, chart_gen)
-                render_realtime_map(map_gen)
-                render_alerts_and_activity(period_data)
-                render_recommendations(period_data)
+                    render_header(period_data.period_name)
+                    render_operational_summary(period_data, financial_metrics)
+                    render_performance_analysis(period_data, chart_gen)
+                    render_equipment_performance(period_data, chart_gen)
+                    render_realtime_map(map_gen)
+                    render_alerts_and_activity(period_data)
+                    render_recommendations(period_data)
 
-                if st.session_state.get('role') == 'admin':
-                    render_financial_module(financial_metrics, period_data)
+                    if st.session_state.get('role') == 'admin':
+                        render_financial_module(financial_metrics, period_data)
+                    else:
+                        st.info("🔒 Le module financier détaillé est réservé à l'administrateur.")
+
+                    render_footer(financial_metrics, period_data.period_name)
                 else:
-                    st.info("🔒 Le module financier détaillé est réservé à l'administrateur.")
-
-                render_footer(financial_metrics, period_data.period_name)
-
+                    st.warning("Les données du port ne sont pas disponibles. Veuillez charger des données via la sidebar.")
             else:
-                # ---- Nouveau système multi-secteurs ----
-                if 'data' in st.session_state and st.session_state.data is not None:
-                   data = st.session_state.data
-                   sector_obj = SectorFactory.get_sector(sector)
+                # Nouveau système multi-secteurs
+                data = st.session_state.get('data')
+                if data is not None:
+                    sector_obj = SectorFactory.get_sector(sector)
 
+                    # Calcul des métriques
+                    metrics = sector_obj.calculate_metrics(data)
+                    gain_params = {
+                        'hourly_technician_cost': st.session_state.get('hourly_cost', 50),
+                        # Ajoutez d'autres paramètres selon les besoins du secteur
+                    }
+                    gains = sector_obj.calculate_gains(data, gain_params)
 
-                # Calcul des métriques
-                metrics = sector_obj.calculate_metrics(data)
-                gain_params = {
-                    'hourly_technician_cost': st.session_state.get('hourly_cost', 50),
-                    # Ajoutez d'autres paramètres selon les besoins du secteur
-                }
-                gains = sector_obj.calculate_gains(data, gain_params)
+                    # Affichage des KPI
+                    render_sector_metrics(metrics, sector_name=sector)
 
-                # Affichage des KPI
-                render_sector_metrics(metrics, sector_name=sector)
+                    # Visualisations
+                    figs = sector_obj.get_visualizations(data)
+                    for fig in figs:
+                        st.plotly_chart(fig, use_container_width=True)
 
-                # Visualisations
-                figs = sector_obj.get_visualizations(data)
-                for fig in figs:
-                    st.plotly_chart(fig, use_container_width=True)
+                    # Affichage des gains
+                    st.markdown("## Gains financiers estimés")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Gains totaux période", f"${gains['period_gains']:,.0f}")
+                    with col2:
+                        st.metric("Gains journaliers moyens", f"${gains['daily_gains']:,.0f}")
+                    with col3:
+                        # Exemple de commission (10% des gains journaliers)
+                        st.metric("Votre commission (exemple)", f"${gains['daily_gains'] * 0.1:,.0f}")
 
-                # Affichage des gains
-                st.markdown("## Gains financiers estimés")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Gains totaux période", f"${gains['period_gains']:,.0f}")
-                with col2:
-                    st.metric("Gains journaliers moyens", f"${gains['daily_gains']:,.0f}")
-                with col3:
-                    # Exemple de commission (10% des gains journaliers)
-                    st.metric("Votre commission (exemple)", f"${gains['daily_gains'] * 0.1:,.0f}")
-
-                # Détail des gains
-                with st.expander("Détail des gains"):
-                    for key, value in gains['breakdown'].items():
-                        st.write(f"{key}: ${value:,.2f}")
-
+                    # Détail des gains
+                    with st.expander("Détail des gains"):
+                        for key, value in gains['breakdown'].items():
+                            st.write(f"{key}: ${value:,.2f}")
+                else:
+                    st.warning("Aucune donnée chargée pour ce secteur. Veuillez charger des données via la sidebar.")
         else:
-             st.warning("Aucune donnée chargée pour ce secteur. Veuillez charger des données via la sidebar.")
+            st.info("Veuillez charger des données via la sidebar.")
 
     except Exception as e:
         st.error(f"Une erreur est survenue : {e}")
@@ -144,37 +145,37 @@ def main():
 
 
 # ------------------------------------------------------------------------------
-# Fonctions de rendu (sidebar, header, etc.)
+# Fonctions de rendu
 # ------------------------------------------------------------------------------
 
 def render_sidebar(data_sync):
     with st.sidebar:
         st.markdown(f"### 🎯 **{i18n.get('sidebar.title')}**")
         st.markdown("---")
-        
+
         if st.button(i18n.get('sidebar.demo_button'), type="primary", use_container_width=True):
             st.session_state.demo_launched = True
             st.rerun()
-        
+
         st.markdown("---")
         st.markdown(f"### {i18n.get('sidebar.period_analysis')}")
-        
+
         default_end = datetime.now()
         default_start = default_end - timedelta(days=30)
-        
+
         period_options = [
             i18n.get('periods.last_7_days'),
             i18n.get('periods.last_30_days'),
             i18n.get('periods.last_90_days'),
             i18n.get('periods.custom')
         ]
-        
+
         selected_period_text = st.selectbox(
             i18n.get('sidebar.select_period'),
             options=period_options,
             key="period_select"
         )
-        
+
         if selected_period_text == i18n.get('periods.last_7_days'):
             period_key = "7d"
         elif selected_period_text == i18n.get('periods.last_30_days'):
@@ -183,14 +184,14 @@ def render_sidebar(data_sync):
             period_key = "90d"
         else:
             period_key = "custom"
-        
+
         handle_period_selection(period_key, default_start, default_end)
 
         # --- Sélection du secteur et mode de données ---
         st.markdown("---")
         st.markdown("### 🏭 Secteur d'activité")
         sector_options = {
-            'port': '⚓ Port',          # ancien secteur
+            'port': '⚓ Port',
             'telecom': '📡 Télécommunications',
             'logistics': '🚚 Logistique',
             'retail': '🛒 Grande Distribution',
@@ -246,16 +247,22 @@ def render_sidebar(data_sync):
                 sector_name = st.session_state.sector
                 if data_mode == "Simulées":
                     if sector_name == 'port':
-                        # Pour le port, on utilise l'ancien générateur via DataSynchronizer
-                        period_data = data_sync.generator.create_period_data(
-                            st.session_state.start_date,
-                            st.session_state.end_date,
-                            use_current_time=True
-                        )
-                        st.session_state.period_data = period_data
-                        st.session_state.data_loaded = True
+                        # Vérifier que les dates sont définies
+                        if 'start_date' not in st.session_state or 'end_date' not in st.session_state:
+                            st.error("Veuillez d'abord sélectionner une période dans la sidebar.")
+                        else:
+                            period_data = data_sync.generator.create_period_data(
+                                st.session_state.start_date,
+                                st.session_state.end_date,
+                                use_current_time=True
+                            )
+                            if period_data is not None:
+                                st.session_state.period_data = period_data
+                                st.session_state.data_loaded = True
+                            else:
+                                st.error("Échec de la génération des données simulées pour le port.")
                     else:
-                        # Pour les autres secteurs, on utilise le générateur du secteur
+                        # Autres secteurs
                         sector = SectorFactory.get_sector(sector_name)
                         data = sector.generate_sample_data(st.session_state.get('sim_days', 30))
                         st.session_state.data = data
@@ -265,31 +272,34 @@ def render_sidebar(data_sync):
                         st.error("Veuillez sélectionner une source de données.")
                     else:
                         if sector_name == 'port':
-                            # Pour le port, on utilise le synchroniseur classique
                             period_data = data_sync.load_period_data()
-                            st.session_state.period_data = period_data
-                            st.session_state.data_loaded = True
+                            if period_data is not None:
+                                st.session_state.period_data = period_data
+                                st.session_state.data_loaded = True
+                            else:
+                                st.error("Impossible de charger les données réelles pour le port.")
                         else:
-                            # Pour les autres secteurs, on utilise le nouveau DataSynchronizer avec secteur/connecteur
                             sync = DataSynchronizer(
                                 sector_name=sector_name,
                                 connector_type=st.session_state.connector_type,
                                 connector_config=st.session_state.connector_config
                             )
                             data = sync.load_data(st.session_state.data_source)
-                            st.session_state.data = data
-                            st.session_state.data_loaded = True
+                            if data is not None:
+                                st.session_state.data = data
+                                st.session_state.data_loaded = True
+                            else:
+                                st.error("Échec du chargement des données pour le secteur.")
                 st.rerun()
-        # --- FIN DU NOUVEAU CODE ---
 
         # Filtres (conservés pour le port, mais peut-être à masquer pour les autres secteurs)
         render_filters()
-        
+
         # Sélecteur de langue
         st.markdown("---")
         st.markdown(f"### {i18n.get('sidebar.language')}")
         language = st.selectbox(
-            i18n.get('sidebar.language'),
+            "",
             options=["fr", "en"],
             format_func=lambda x: "🇫🇷 Français" if x == "fr" else "🇬🇧 English",
             key="language_select",
@@ -299,7 +309,7 @@ def render_sidebar(data_sync):
             st.session_state.language = language
             i18n.set_language(language)
             st.rerun()
-        
+
         # Paramètres financiers – réservés aux admins
         if st.session_state.get('role') == 'admin':
             render_financial_params()
@@ -334,11 +344,11 @@ def handle_period_selection(period_key, default_start, default_end):
 def render_filters():
     st.markdown("---")
     st.markdown(f"### {i18n.get('sidebar.filters')}")
-    
+
     st.checkbox(i18n.get('sidebar.show_errors'), value=True, key="show_errors")
     st.checkbox(i18n.get('sidebar.show_alerts'), value=True, key="show_alerts")
     auto_refresh = st.checkbox(i18n.get('sidebar.auto_refresh'), value=False, key="auto_refresh")
-    
+
     if auto_refresh:
         refresh_rate = st.slider(i18n.get('sidebar.refresh_interval'), 5, 60, 30, key="refresh_rate")
         st.info(i18n.get('sidebar.next_refresh', seconds=refresh_rate))
@@ -349,9 +359,9 @@ def render_filters():
 def render_financial_params():
     st.markdown("---")
     st.markdown(f"### {i18n.get('sidebar.financial_params')}")
-    
+
     init_financial_params()
-    
+
     col1, col2 = st.columns(2)
     with col1:
         monthly_fixed = st.number_input(
@@ -440,23 +450,23 @@ def render_sync_section(data_sync):
 
     st.markdown("---")
     st.markdown(f"### {i18n.get('sidebar.data_sync')}")
-    
+
     default_sync_info = f"**Hash des données :** `{PUBLIC_DATA_HASH}`\n\n**Pour partager les mêmes données :**\n1. Configurez la période ci-dessus\n2. Générez le lien de partage\n3. Envoyez-le à vos collaborateurs"
     sync_info_text = i18n.get('sidebar.sync_info', default=default_sync_info)
     if '{hash}' in sync_info_text:
         sync_info_text = sync_info_text.format(hash=PUBLIC_DATA_HASH)
     st.info(sync_info_text)
-    
+
     if st.button(i18n.get('sidebar.generate_link'), use_container_width=True, type="secondary"):
         selected_period = st.session_state.get('selected_period', i18n.get('periods.last_30_days'))
         start_date = st.session_state.get('start_date', datetime.now() - timedelta(days=30))
         end_date = st.session_state.get('end_date', datetime.now())
-        
+
         share_url, link_id = data_sync.generate_shareable_link(selected_period, start_date, end_date)
-        
+
         st.success(i18n.get('sidebar.link_success', id=link_id))
         st.code(share_url, language="text")
-        
+
         st.markdown(f"""
         <a href="{share_url}" target="_blank">
             <button style="background: {COLORS['secondary']}; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: 600;">
@@ -518,7 +528,7 @@ def render_header(period_name):
 
 def render_operational_summary(period_data, financial_metrics):
     st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.operational_summary")}</h2>', unsafe_allow_html=True)
-    
+
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         total_ops = period_data.daily_data['nb_operations'].sum()
@@ -562,7 +572,7 @@ def render_operational_summary(period_data, financial_metrics):
 
 def render_performance_analysis(period_data, chart_gen):
     st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.performance_analysis")}</h2>', unsafe_allow_html=True)
-    
+
     col1, col2 = st.columns(2)
     with col1:
         st.markdown(f"#### {i18n.get('dashboard.daily_activity')}")
@@ -582,7 +592,7 @@ def render_performance_analysis(period_data, chart_gen):
 
 def render_equipment_performance(period_data, chart_gen):
     st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.equipment_performance")}</h2>', unsafe_allow_html=True)
-    
+
     col1, col2 = st.columns([2, 1])
     with col1:
         if not period_data.engins_data.empty:
@@ -613,7 +623,7 @@ def render_equipment_performance(period_data, chart_gen):
 
 def render_realtime_map(map_gen):
     st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.realtime_map")}</h2>', unsafe_allow_html=True)
-    
+
     col1, col2 = st.columns([3, 1])
     with col1:
         port_map = map_gen.create_realtime_map()
@@ -630,7 +640,7 @@ def render_realtime_map(map_gen):
         st.checkbox(i18n.get('dashboard.show_routes'), value=True, key="show_routes")
         st.checkbox(i18n.get('dashboard.show_congestion'), value=True, key="show_congestion")
         st.checkbox(i18n.get('dashboard.show_alerts_on_map'), value=True, key="show_alerts_on_map")
-        
+
         st.markdown("---")
         st.markdown(f"#### {i18n.get('dashboard.legend')}")
         st.markdown(i18n.get('dashboard.legend_main_quay'))
@@ -642,7 +652,7 @@ def render_realtime_map(map_gen):
 
 def render_alerts_and_activity(period_data):
     st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.alerts")}</h2>', unsafe_allow_html=True)
-    
+
     col1, col2 = st.columns(2)
     with col1:
         st.markdown(f"#### {i18n.get('dashboard.active_alerts')}")
@@ -667,7 +677,7 @@ def render_alerts_and_activity(period_data):
                     UIComponents.render_alert(alert, "warning")
         else:
             UIComponents.render_alert(i18n.get('dashboard.no_alerts'), "success")
-    
+
     with col2:
         st.markdown(f"#### {i18n.get('dashboard.recent_ops')}")
         if not period_data.recent_ops.empty:
@@ -689,7 +699,7 @@ def render_alerts_and_activity(period_data):
 
 def render_recommendations(period_data):
     st.markdown(f'<h2 class="section-title">{i18n.get("dashboard.recommendations")}</h2>', unsafe_allow_html=True)
-    
+
     recommendations = []
     if not period_data.recent_ops.empty and 'urgence' in period_data.recent_ops.columns:
         zone_urgences = period_data.recent_ops.groupby('zone')['urgence'].sum()
@@ -777,13 +787,13 @@ def render_financial_module(financial_metrics, period_data):
     col_graphique, col_resume = st.columns([3, 2])
 
     with col_graphique:
-        st.markdown(f"{i18n.get('financial.pie_chart_title')}")
+        st.markdown(f"#### {i18n.get('financial.pie_chart_title')}")
         chart_gen = ChartGenerator()
         fig_fin = chart_gen.create_financial_pie_chart(financial_metrics.breakdown)
         st.plotly_chart(fig_fin, use_container_width=True)
 
     with col_resume:
-        st.markdown(f" {i18n.get('financial.contract_summary')}")
+        st.markdown(f"#### {i18n.get('financial.contract_summary')}")
 
         st.markdown('''
         <div style="
@@ -844,6 +854,8 @@ def render_financial_module(financial_metrics, period_data):
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         key="download_excel"
                     )
+                else:
+                    st.info("Fonction d'export non disponible (module manquant)")
 
         with col_btn2:
             if st.button(i18n.get('financial.refresh'), type="primary", use_container_width=True):
@@ -851,17 +863,17 @@ def render_financial_module(financial_metrics, period_data):
 
     st.markdown("---")
 
-    st.markdown(f" {i18n.get('financial.details_expander')}")
+    st.markdown(f"#### {i18n.get('financial.details_expander')}")
 
     with st.expander(i18n.get('financial.show_details'), expanded=True):
-        st.markdown(f" {i18n.get('financial.period_analyzed')}")
+        st.markdown(f"### {i18n.get('financial.period_analyzed')}")
         st.markdown(f"{i18n.get('financial.from', date=period_summary['start_date'])}")
         st.markdown(f"{i18n.get('financial.to', date=period_summary['end_date'])}")
         st.markdown(f"{i18n.get('financial.days_count', days=period_summary['total_days'])}")
         st.markdown(f"{i18n.get('financial.data_hash', hash=PUBLIC_DATA_HASH)}")
         st.divider()
 
-        st.markdown(f" {i18n.get('financial.gain_time')}")
+        st.markdown(f"### {i18n.get('financial.gain_time')}")
 
         baseline_duration = st.session_state.baseline_duration
         avg_duration = period_summary['avg_duration']
@@ -888,7 +900,7 @@ def render_financial_module(financial_metrics, period_data):
         """)
         st.divider()
 
-        st.markdown(f" {i18n.get('financial.gain_errors')}")
+        st.markdown(f"### {i18n.get('financial.gain_errors')}")
 
         baseline_error_rate = st.session_state.baseline_error_rate * 100
         current_error_rate = period_summary['error_rate']
@@ -911,17 +923,17 @@ def render_financial_module(financial_metrics, period_data):
         """)
         st.divider()
 
-        st.markdown(f"{i18n.get('financial.gain_maintenance')}")
+        st.markdown(f"### {i18n.get('financial.gain_maintenance')}")
 
-        maintenance_alerts = financial_metrics.metrics.get('maintenance_alerts', 0)
         maintenance_cost = 500
         maintenance_gain_period = financial_metrics.breakdown.get('maintenance_gain_period', 0)
+        maintenance_alerts = int(maintenance_gain_period / maintenance_cost) if maintenance_cost > 0 else 0
 
         st.markdown(f"""
         {i18n.get('financial.params')}
         - {i18n.get('financial.maintenance_alerts')}: {maintenance_alerts} {i18n.get('common.alerts')}
-        - {i18n.get('financial.maintenance_cost_per_alert')}: ${maintenance_cost}$
-        - {i18n.get('financial.maintenance_gain_total')}: ${maintenance_gain_period:,.2f}$
+        - {i18n.get('financial.maintenance_cost_per_alert')}: ${maintenance_cost}
+        - {i18n.get('financial.maintenance_gain_total')}: ${maintenance_gain_period:,.2f}
 
         {i18n.get('financial.calculation')}
         - {i18n.get('financial.total_gain')}: {maintenance_alerts} × ${maintenance_cost} = ${maintenance_gain_period:,.2f}$
@@ -929,7 +941,7 @@ def render_financial_module(financial_metrics, period_data):
         """)
         st.divider()
 
-        st.markdown(f" {i18n.get('financial.gain_fuel')}")
+        st.markdown(f"### {i18n.get('financial.gain_fuel')}")
 
         trucks_per_day = min(500, period_summary['avg_daily_operations'] * 0.3)
         fuel_saving = 1.5
@@ -939,7 +951,7 @@ def render_financial_module(financial_metrics, period_data):
 
         st.markdown(f"""
         {i18n.get('financial.params')}
-        - {i18n.get('financial.trucks_per_day')}: {trucks_per_day:.0f} ${i18n.get('common.trucks')}$
+        - {i18n.get('financial.trucks_per_day')}: {trucks_per_day:.0f} {i18n.get('common.trucks')}
         - {i18n.get('financial.fuel_saving_per_truck')}: ${fuel_saving}{i18n.get('common.per_day')}
         - {i18n.get('financial.days_analyzed')}: {period_summary['total_days']} {i18n.get('common.days')}
 
@@ -948,32 +960,33 @@ def render_financial_module(financial_metrics, period_data):
         - {i18n.get('financial.total_fuel_gain')}: ${daily_fuel_gain:.2f}{i18n.get('common.per_day')} × {period_summary['total_days']} {i18n.get('common.days')} = ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}$
         """)
         st.divider()
-               # Synthèse financière
+
+        # Synthèse financière
         st.markdown("---")
-        st.markdown(f" {i18n.get('financial.summary', '📊 SYNTHÈSE FINANCIÈRE')}")
+        st.markdown(f"### {i18n.get('financial.summary', '📊 SYNTHÈSE FINANCIÈRE')}")
 
         # Gains totaux sur la période
-        st.markdown(f"{i18n.get('financial.total_gains_period', 'Gains totaux sur la période :')}")
-        st.markdown(f"- {i18n.get('financial.gain_time', '1. GAIN TEMPS')}: ${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}")
-        st.markdown(f"- {i18n.get('financial.gain_errors', '2. GAIN ERREURS')}: ${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}")
-        st.markdown(f"- {i18n.get('financial.gain_maintenance', '3. GAIN MAINTENANCE')}: ${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}")
-        st.markdown(f"- {i18n.get('financial.gain_fuel', '4. GAIN CARBURANT')}: ${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}")
+        st.markdown(f"**{i18n.get('financial.total_gains_period', 'Gains totaux sur la période :')}**")
+        st.markdown(f"- {i18n.get('financial.gain_time', '1. GAIN TEMPS')}: **${financial_metrics.breakdown.get('time_gain_period', 0):,.2f}**")
+        st.markdown(f"- {i18n.get('financial.gain_errors', '2. GAIN ERREURS')}: **${financial_metrics.breakdown.get('error_gain_period', 0):,.2f}**")
+        st.markdown(f"- {i18n.get('financial.gain_maintenance', '3. GAIN MAINTENANCE')}: **${financial_metrics.breakdown.get('maintenance_gain_period', 0):,.2f}**")
+        st.markdown(f"- {i18n.get('financial.gain_fuel', '4. GAIN CARBURANT')}: **${financial_metrics.breakdown.get('fuel_gain_period', 0):,.2f}**")
 
-        st.markdown(f"{i18n.get('financial.total_period_gains', 'Total des gains sur la période')}:${financial_metrics.period_gains:,.2f}")
+        st.markdown(f"**{i18n.get('financial.total_period_gains', 'Total des gains sur la période')}:** **${financial_metrics.period_gains:,.2f}**")
 
         # Moyennes journalières
-        st.markdown(f"{i18n.get('financial.daily_averages', 'Moyennes journalières :')}")
-        st.markdown(f"- {i18n.get('financial.gain_time', '1. GAIN TEMPS')}: ${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}")
-        st.markdown(f"- {i18n.get('financial.gain_errors', '2. GAIN ERREURS')}: ${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}")
-        st.markdown(f"- {i18n.get('financial.gain_maintenance', '3. GAIN MAINTENANCE')}: ${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}")
-        st.markdown(f"- {i18n.get('financial.gain_fuel', '4. GAIN CARBURANT')}: ${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}")
+        st.markdown(f"**{i18n.get('financial.daily_averages', 'Moyennes journalières :')}**")
+        st.markdown(f"- {i18n.get('financial.gain_time', '1. GAIN TEMPS')}: **${financial_metrics.breakdown.get('time_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}**")
+        st.markdown(f"- {i18n.get('financial.gain_errors', '2. GAIN ERREURS')}: **${financial_metrics.breakdown.get('error_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}**")
+        st.markdown(f"- {i18n.get('financial.gain_maintenance', '3. GAIN MAINTENANCE')}: **${financial_metrics.breakdown.get('maintenance_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}**")
+        st.markdown(f"- {i18n.get('financial.gain_fuel', '4. GAIN CARBURANT')}: **${financial_metrics.breakdown.get('fuel_gain', 0):,.2f}{i18n.get('common.per_day', '/jour')}**")
 
-        st.markdown(f"{i18n.get('financial.total_daily_gains', 'Total des gains journaliers')}: ${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day', '/jour')}")
+        st.markdown(f"**{i18n.get('financial.total_daily_gains', 'Total des gains journaliers')}:** ${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day', '/jour')}")
 
-        st.markdown(f"{i18n.get('financial.monthly_projection_detail', days=st.session_state.working_days)}")
+        st.markdown(f"**{i18n.get('financial.monthly_projection_detail', days=st.session_state.working_days)}**")
         st.markdown(f"- ${financial_metrics.daily_gains:,.2f}{i18n.get('common.per_day', '/jour')} × {st.session_state.working_days} {i18n.get('common.days', 'jours')} = ${financial_metrics.monthly_projection:,.2f}")
 
-        st.markdown(f"{i18n.get('financial.your_commission_detail', 'Votre commission :')}")
+        st.markdown(f"**{i18n.get('financial.your_commission_detail', 'Votre commission :')}**")
         st.markdown(f"- {i18n.get('financial.fixed_monthly', 'Fixe mensuel')}: ${st.session_state.monthly_fixed:,.2f}")
         st.markdown(f"- {i18n.get('financial.variable', rate=st.session_state.commission_rate*100)}: ${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}")
         st.markdown(f"- {i18n.get('financial.total_commission', 'Commission totale')}: ${financial_metrics.your_commission_monthly:,.2f}")
@@ -997,7 +1010,7 @@ def render_sector_metrics(metrics, sector_name):
     # Séparer les métriques scalaires des autres (listes, dictionnaires...)
     scalar_metrics = {k: v for k, v in metrics.items() if isinstance(v, (int, float, str, type(None)))}
     other_metrics = {k: v for k, v in metrics.items() if not isinstance(v, (int, float, str, type(None)))}
-    
+
     if scalar_metrics:
         cols = st.columns(len(scalar_metrics))
         for i, (key, value) in enumerate(scalar_metrics.items()):
@@ -1006,7 +1019,7 @@ def render_sector_metrics(metrics, sector_name):
                     st.metric(key.replace('_', ' ').title(), f"{value:.2f}")
                 else:
                     st.metric(key.replace('_', ' ').title(), value)
-    
+
     if other_metrics:
         st.markdown("#### Détails supplémentaires")
         for key, value in other_metrics.items():
