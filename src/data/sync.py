@@ -5,7 +5,7 @@ import json
 import urllib.parse
 import uuid
 from datetime import datetime, timedelta
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple
 from pathlib import Path
 
 import pandas as pd
@@ -214,11 +214,22 @@ class DataSynchronizer:
         # NOTE: La structure de PeriodData n'étant pas connue, nous supposons
         # qu'elle accepte au minimum start_date, end_date, et un champ 'data'.
         # Vous devrez ajuster cette méthode en fonction de la vraie définition.
-        return PeriodData(
-            start_date=start_date,
-            end_date=end_date,
-            data=df.to_dict(orient='records') if hasattr(PeriodData, 'data') else df
-        )
+        # Si PeriodData attend un DataFrame, on peut passer df directement.
+        # Sinon, on le convertit en dictionnaire.
+        if hasattr(PeriodData, 'data'):
+            # Supposons que PeriodData a un attribut 'data' qui peut être un dict
+            return PeriodData(
+                start_date=start_date,
+                end_date=end_date,
+                data=df.to_dict(orient='records')
+            )
+        else:
+            # Sinon, on suppose que le constructeur accepte le DataFrame
+            return PeriodData(
+                start_date=start_date,
+                end_date=end_date,
+                df=df  # ou tout autre nom d'attribut
+            )
 
     def generate_shareable_link(
         self,
