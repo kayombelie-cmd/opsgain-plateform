@@ -264,8 +264,9 @@ def render_sidebar(data_sync):
                     else:
                         # Autres secteurs
                         sector = SectorFactory.get_sector(sector_name)
-                        data = sector.generate_sample_data(st.session_state.get('sim_days', 30))
-                        st.session_state.data = data
+                        raw_data = sector.generate_sample_data(st.session_state.get('sim_days', 30))
+                        transformed_data = sector.transform(raw_data)
+                        st.session_state.data = transformed_data
                         st.session_state.data_loaded = True
                 else:  # mode réel
                     if 'data_source' not in st.session_state:
