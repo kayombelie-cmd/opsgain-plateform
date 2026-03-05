@@ -34,7 +34,7 @@ except ImportError:
     generate_excel_report = None
     print("⚠️ Module src.utils.exports non trouvé – fonction d'export désactivée.")
 
-# 🔧 NOUVEAU : Importer SectorFactory
+# 🔧 Import de SectorFactory
 from src.sectors import SectorFactory
 
 # Configuration du logger
@@ -47,12 +47,19 @@ def main():
         if 'language' not in st.session_state:
             st.session_state.language = 'fr'
         i18n.set_language(st.session_state.language)
-
+        # Initialisation des variables de session
+        if 'data_loaded' not in st.session_state:
+            st.session_state.data_loaded = False
+        if 'data' not in st.session_state:
+            st.session_state.data = None
+        if 'period_data' not in st.session_state:
+            st.session_state.period_data = None
         # Authentification
         Authentication.check_auth()
-         # Initialiser le rôle si absent (par sécurité)
+        # Initialiser le rôle si absent (par sécurité)
         if 'role' not in st.session_state:
             st.session_state.role = 'user'   # rôle par défaut
+
         # CSS
         st.markdown(UIComponents.style_css(), unsafe_allow_html=True)
 
@@ -65,46 +72,72 @@ def main():
         # Sidebar
         render_sidebar(data_sync)
 
-                # --- NOUVEAU : Affichage basé sur les données du secteur ---
+        # --- Affichage conditionnel selon le secteur ---
         if st.session_state.get('data_loaded', False):
-            data = st.session_state.data
-            sector = SectorFactory.get_sector(st.session_state.sector)
+            sector = st.session_state.sector
 
-            # Calcul des métriques
-            metrics = sector.calculate_metrics(data)
-            # Paramètres de gains (à adapter selon vos besoins)
-            gain_params = {
-                'hourly_technician_cost': st.session_state.get('hourly_cost', 50),
-                # Ajoutez d'autres paramètres si nécessaire
-            }
-            gains = sector.calculate_gains(data, gain_params)
+            if sector == 'port':
+                # ---- Ancien tableau de bord (Port) ----
+                period_data = st.session_state.period_data  # on stocke l'objet PeriodData
+                financial_metrics = finance_calc.calculate(period_data)
 
-            # Affichage des KPI
-            render_sector_metrics(metrics, sector_name=st.session_state.sector)
+                render_header(period_data.period_name)
+                render_operational_summary(period_data, financial_metrics)
+                render_performance_analysis(period_data, chart_gen)
+                render_equipment_performance(period_data, chart_gen)
+                render_realtime_map(map_gen)
+                render_alerts_and_activity(period_data)
+                render_recommendations(period_data)
 
-            # Visualisations
-            figs = sector.get_visualizations(data)
-            for fig in figs:
-                st.plotly_chart(fig, use_container_width=True)
+                if st.session_state.get('role') == 'admin':
+                    render_financial_module(financial_metrics, period_data)
+                else:
+                    st.info("🔒 Le module financier détaillé est réservé à l'administrateur.")
 
-            # Affichage des gains
-            st.markdown(f"## Gains financiers estimés")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Gains totaux période", f"${gains['period_gains']:,.0f}")
-            with col2:
-                st.metric("Gains journaliers moyens", f"${gains['daily_gains']:,.0f}")
-            with col3:
-                # Exemple de commission (10% des gains journaliers)
-                st.metric("Votre commission (exemple)", f"${gains['daily_gains'] * 0.1:,.0f}")
+                render_footer(financial_metrics, period_data.period_name)
 
-            # Détail des gains
-            with st.expander("Détail des gains"):
-                for key, value in gains['breakdown'].items():
-                    st.write(f"{key}: ${value:,.2f}")
+            else:
+                # ---- Nouveau système multi-secteurs ----
+                if 'data' in st.session_state and st.session_state.data is not None:
+                   data = st.session_state.data
+                   sector_obj = SectorFactory.get_sector(sector)
+
+
+                # Calcul des métriques
+                metrics = sector_obj.calculate_metrics(data)
+                gain_params = {
+                    'hourly_technician_cost': st.session_state.get('hourly_cost', 50),
+                    # Ajoutez d'autres paramètres selon les besoins du secteur
+                }
+                gains = sector_obj.calculate_gains(data, gain_params)
+
+                # Affichage des KPI
+                render_sector_metrics(metrics, sector_name=sector)
+
+                # Visualisations
+                figs = sector_obj.get_visualizations(data)
+                for fig in figs:
+                    st.plotly_chart(fig, use_container_width=True)
+
+                # Affichage des gains
+                st.markdown("## Gains financiers estimés")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Gains totaux période", f"${gains['period_gains']:,.0f}")
+                with col2:
+                    st.metric("Gains journaliers moyens", f"${gains['daily_gains']:,.0f}")
+                with col3:
+                    # Exemple de commission (10% des gains journaliers)
+                    st.metric("Votre commission (exemple)", f"${gains['daily_gains'] * 0.1:,.0f}")
+
+                # Détail des gains
+                with st.expander("Détail des gains"):
+                    for key, value in gains['breakdown'].items():
+                        st.write(f"{key}: ${value:,.2f}")
+
         else:
-            st.info("Veuillez charger des données via la sidebar.")
-        # --- FIN DU NOUVEAU CODE ---
+             st.warning("Aucune donnée chargée pour ce secteur. Veuillez charger des données via la sidebar.")
+
     except Exception as e:
         st.error(f"Une erreur est survenue : {e}")
         st.exception(e)
@@ -129,7 +162,6 @@ def render_sidebar(data_sync):
         default_end = datetime.now()
         default_start = default_end - timedelta(days=30)
         
-        # Liste des options de période traduites
         period_options = [
             i18n.get('periods.last_7_days'),
             i18n.get('periods.last_30_days'),
@@ -137,14 +169,12 @@ def render_sidebar(data_sync):
             i18n.get('periods.custom')
         ]
         
-        # Sélecteur de période
         selected_period_text = st.selectbox(
             i18n.get('sidebar.select_period'),
             options=period_options,
             key="period_select"
         )
         
-        # Mapper le texte sélectionné à une clé interne
         if selected_period_text == i18n.get('periods.last_7_days'):
             period_key = "7d"
         elif selected_period_text == i18n.get('periods.last_30_days'):
@@ -154,13 +184,13 @@ def render_sidebar(data_sync):
         else:
             period_key = "custom"
         
-        # Appeler la fonction de gestion des dates avec la clé
         handle_period_selection(period_key, default_start, default_end)
 
-                # --- NOUVEAU : Sélection du secteur et mode de données ---
+        # --- Sélection du secteur et mode de données ---
         st.markdown("---")
         st.markdown("### 🏭 Secteur d'activité")
         sector_options = {
+            'port': '⚓ Port',          # ancien secteur
             'telecom': '📡 Télécommunications',
             'logistics': '🚚 Logistique',
             'retail': '🛒 Grande Distribution',
@@ -215,33 +245,51 @@ def render_sidebar(data_sync):
             with st.spinner("Chargement en cours..."):
                 sector_name = st.session_state.sector
                 if data_mode == "Simulées":
-                    sector = SectorFactory.get_sector(sector_name)
-                    data = sector.generate_sample_data(st.session_state.get('sim_days', 30))
-                    st.session_state.data = data
-                    st.session_state.data_loaded = True
-                else:
+                    if sector_name == 'port':
+                        # Pour le port, on utilise l'ancien générateur via DataSynchronizer
+                        period_data = data_sync.generator.create_period_data(
+                            st.session_state.start_date,
+                            st.session_state.end_date,
+                            use_current_time=True
+                        )
+                        st.session_state.period_data = period_data
+                        st.session_state.data_loaded = True
+                    else:
+                        # Pour les autres secteurs, on utilise le générateur du secteur
+                        sector = SectorFactory.get_sector(sector_name)
+                        data = sector.generate_sample_data(st.session_state.get('sim_days', 30))
+                        st.session_state.data = data
+                        st.session_state.data_loaded = True
+                else:  # mode réel
                     if 'data_source' not in st.session_state:
                         st.error("Veuillez sélectionner une source de données.")
                     else:
-                        sync = DataSynchronizer(
-                            sector_name=sector_name,
-                            connector_type=st.session_state.connector_type,
-                            connector_config=st.session_state.connector_config
-                        )
-                        data = sync.load_data(st.session_state.data_source)
-                        st.session_state.data = data
-                        st.session_state.data_loaded = True
+                        if sector_name == 'port':
+                            # Pour le port, on utilise le synchroniseur classique
+                            period_data = data_sync.load_period_data()
+                            st.session_state.period_data = period_data
+                            st.session_state.data_loaded = True
+                        else:
+                            # Pour les autres secteurs, on utilise le nouveau DataSynchronizer avec secteur/connecteur
+                            sync = DataSynchronizer(
+                                sector_name=sector_name,
+                                connector_type=st.session_state.connector_type,
+                                connector_config=st.session_state.connector_config
+                            )
+                            data = sync.load_data(st.session_state.data_source)
+                            st.session_state.data = data
+                            st.session_state.data_loaded = True
                 st.rerun()
         # --- FIN DU NOUVEAU CODE ---
-        
-        # Filtres
+
+        # Filtres (conservés pour le port, mais peut-être à masquer pour les autres secteurs)
         render_filters()
         
         # Sélecteur de langue
         st.markdown("---")
         st.markdown(f"### {i18n.get('sidebar.language')}")
         language = st.selectbox(
-            "",
+            i18n.get('sidebar.language'),
             options=["fr", "en"],
             format_func=lambda x: "🇫🇷 Français" if x == "fr" else "🇬🇧 English",
             key="language_select",
@@ -387,7 +435,6 @@ def init_financial_params():
 
 
 def render_sync_section(data_sync):
-    # Ne rien afficher si l'utilisateur n'est pas authentifié
     if not st.session_state.get('authenticated', False):
         return
 
@@ -797,8 +844,6 @@ def render_financial_module(financial_metrics, period_data):
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         key="download_excel"
                     )
-                
-                    
 
         with col_btn2:
             if st.button(i18n.get('financial.refresh'), type="primary", use_container_width=True):
@@ -945,15 +990,35 @@ def render_footer(financial_metrics, period_name):
         <small>Dernière mise à jour: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</small>
     </div>
     """, unsafe_allow_html=True)
+
+
 def render_sector_metrics(metrics, sector_name):
-    st.markdown(f" Métriques opérationnelles - {sector_name.capitalize()}")
-    cols = st.columns(len(metrics))
-    for i, (key, value) in enumerate(metrics.items()):
-        with cols[i % len(cols)]:
-            if isinstance(value, float):
-                st.metric(key.replace('_', ' ').title(), f"{value:.2f}")
+    st.markdown(f"## Métriques opérationnelles - {sector_name.capitalize()}")
+    # Séparer les métriques scalaires des autres (listes, dictionnaires...)
+    scalar_metrics = {k: v for k, v in metrics.items() if isinstance(v, (int, float, str, type(None)))}
+    other_metrics = {k: v for k, v in metrics.items() if not isinstance(v, (int, float, str, type(None)))}
+    
+    if scalar_metrics:
+        cols = st.columns(len(scalar_metrics))
+        for i, (key, value) in enumerate(scalar_metrics.items()):
+            with cols[i % len(cols)]:
+                if isinstance(value, float):
+                    st.metric(key.replace('_', ' ').title(), f"{value:.2f}")
+                else:
+                    st.metric(key.replace('_', ' ').title(), value)
+    
+    if other_metrics:
+        st.markdown("#### Détails supplémentaires")
+        for key, value in other_metrics.items():
+            if isinstance(value, dict):
+                st.write(f"**{key.replace('_', ' ').title()}** :")
+                for sub_key, sub_val in value.items():
+                    st.write(f"- {sub_key}: {sub_val}")
+            elif isinstance(value, list):
+                st.write(f"**{key.replace('_', ' ').title()}** : {', '.join(map(str, value))}")
             else:
-                st.metric(key.replace('_', ' ').title(), value)
+                st.write(f"**{key.replace('_', ' ').title()}** : {value}")
+
 
 if __name__ == "__main__":
     main()
