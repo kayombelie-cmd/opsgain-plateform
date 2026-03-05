@@ -28,7 +28,7 @@ from src.visualization.charts import ChartGenerator
 from src.visualization.maps import MapGenerator
 from src.sectors import SectorFactory
 
-# ⚠️ Import conditionnel de l'export Excel (s'il n'existe pas, on le met à None)
+# ⚠️ Import conditionnel de l'export Excel
 try:
     from src.utils.exports import generate_excel_report
 except ImportError:
@@ -54,7 +54,7 @@ def main():
         if 'period_data' not in st.session_state:
             st.session_state.period_data = None
         if 'role' not in st.session_state:
-            st.session_state.role = 'user'   # rôle par défaut
+            st.session_state.role = 'user'
 
         # Authentification
         Authentication.check_auth()
@@ -76,7 +76,6 @@ def main():
             sector = st.session_state.get('sector', 'port')
 
             if sector == 'port':
-                # Vérifier que period_data existe et n'est pas None
                 period_data = st.session_state.get('period_data')
                 if period_data is not None:
                     financial_metrics = finance_calc.calculate(period_data)
@@ -98,28 +97,22 @@ def main():
                 else:
                     st.warning("Les données du port ne sont pas disponibles. Veuillez charger des données via la sidebar.")
             else:
-                # Nouveau système multi-secteurs
                 data = st.session_state.get('data')
                 if data is not None:
                     sector_obj = SectorFactory.get_sector(sector)
 
-                    # Calcul des métriques
                     metrics = sector_obj.calculate_metrics(data)
                     gain_params = {
                         'hourly_technician_cost': st.session_state.get('hourly_cost', 50),
-                        # Ajoutez d'autres paramètres selon les besoins du secteur
                     }
                     gains = sector_obj.calculate_gains(data, gain_params)
 
-                    # Affichage des KPI
                     render_sector_metrics(metrics, sector_name=sector)
 
-                    # Visualisations
                     figs = sector_obj.get_visualizations(data)
                     for fig in figs:
                         st.plotly_chart(fig, use_container_width=True)
 
-                    # Affichage des gains
                     st.markdown("## Gains financiers estimés")
                     col1, col2, col3 = st.columns(3)
                     with col1:
@@ -127,10 +120,8 @@ def main():
                     with col2:
                         st.metric("Gains journaliers moyens", f"${gains['daily_gains']:,.0f}")
                     with col3:
-                        # Exemple de commission (10% des gains journaliers)
                         st.metric("Votre commission (exemple)", f"${gains['daily_gains'] * 0.1:,.0f}")
 
-                    # Détail des gains
                     with st.expander("Détail des gains"):
                         for key, value in gains['breakdown'].items():
                             st.write(f"{key}: ${value:,.2f}")
@@ -203,11 +194,36 @@ def render_sidebar(data_sync):
             format_func=lambda x: sector_options[x],
             key='sector_select'
         )
+
+        # Détection du changement de secteur
         if selected_sector_key != st.session_state.get('sector'):
             st.session_state.sector = selected_sector_key
-            st.rerun()
+            # Si on est en mode simulé, charger automatiquement les données
+            if st.session_state.get('data_mode') == "Simulées":
+                sector = SectorFactory.get_sector(selected_sector_key)
+                if selected_sector_key == 'port':
+                    # Vérifier que les dates sont définies, sinon utiliser les valeurs par défaut
+                    if 'start_date' not in st.session_state or 'end_date' not in st.session_state:
+                        default_end = datetime.now()
+                        default_start = default_end - timedelta(days=30)
+                        st.session_state.start_date = default_start
+                        st.session_state.end_date = default_end
+                    period_data = data_sync.generator.create_period_data(
+                        st.session_state.start_date,
+                        st.session_state.end_date,
+                        use_current_time=True
+                    )
+                    if period_data is not None:
+                        st.session_state.period_data = period_data
+                        st.session_state.data_loaded = True
+                else:
+                    raw_data = sector.generate_sample_data(st.session_state.get('sim_days', 30))
+                    transformed_data = sector.transform(raw_data)
+                    st.session_state.data = transformed_data
+                    st.session_state.data_loaded = True
+                st.rerun()
 
-        # Choix du mode de données (simulées ou réel)
+        # Choix du mode de données
         data_mode = st.radio("Mode de données", ["Simulées", "Réelles"], key='data_mode')
 
         if data_mode == "Réelles":
@@ -247,7 +263,6 @@ def render_sidebar(data_sync):
                 sector_name = st.session_state.sector
                 if data_mode == "Simulées":
                     if sector_name == 'port':
-                        # Vérifier que les dates sont définies
                         if 'start_date' not in st.session_state or 'end_date' not in st.session_state:
                             st.error("Veuillez d'abord sélectionner une période dans la sidebar.")
                         else:
@@ -262,7 +277,6 @@ def render_sidebar(data_sync):
                             else:
                                 st.error("Échec de la génération des données simulées pour le port.")
                     else:
-                        # Autres secteurs
                         sector = SectorFactory.get_sector(sector_name)
                         raw_data = sector.generate_sample_data(st.session_state.get('sim_days', 30))
                         transformed_data = sector.transform(raw_data)
@@ -1008,7 +1022,7 @@ def render_footer(financial_metrics, period_name):
 
 def render_sector_metrics(metrics, sector_name):
     st.markdown(f"## Métriques opérationnelles - {sector_name.capitalize()}")
-    # Séparer les métriques scalaires des autres (listes, dictionnaires...)
+    # Séparer les métriques scalaires des autres
     scalar_metrics = {k: v for k, v in metrics.items() if isinstance(v, (int, float, str, type(None)))}
     other_metrics = {k: v for k, v in metrics.items() if not isinstance(v, (int, float, str, type(None)))}
 
