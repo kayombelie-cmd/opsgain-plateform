@@ -34,6 +34,9 @@ except ImportError:
     generate_excel_report = None
     print("⚠️ Module src.utils.exports non trouvé – fonction d'export désactivée.")
 
+# 🔧 NOUVEAU : Importer SectorFactory
+from src.sectors import SectorFactory
+
 # Configuration du logger
 logger = setup_logger(__name__)
 
@@ -62,30 +65,46 @@ def main():
         # Sidebar
         render_sidebar(data_sync)
 
-        # Chargement des données
-        with st.spinner("Chargement des données synchronisées..."):
-            period_data = data_sync.load_period_data()
+                # --- NOUVEAU : Affichage basé sur les données du secteur ---
+        if st.session_state.get('data_loaded', False):
+            data = st.session_state.data
+            sector = SectorFactory.get_sector(st.session_state.sector)
 
-        # Calculs financiers
-        financial_metrics = finance_calc.calculate(period_data)
+            # Calcul des métriques
+            metrics = sector.calculate_metrics(data)
+            # Paramètres de gains (à adapter selon vos besoins)
+            gain_params = {
+                'hourly_technician_cost': st.session_state.get('hourly_cost', 50),
+                # Ajoutez d'autres paramètres si nécessaire
+            }
+            gains = sector.calculate_gains(data, gain_params)
 
-        # Rendu des différentes sections
-        render_header(period_data.period_name)
-        render_operational_summary(period_data, financial_metrics)
-        render_performance_analysis(period_data, chart_gen)
-        render_equipment_performance(period_data, chart_gen)
-        render_realtime_map(map_gen)
-        render_alerts_and_activity(period_data)
-        render_recommendations(period_data)
+            # Affichage des KPI
+            render_sector_metrics(metrics, sector_name=st.session_state.sector)
 
-        # Module financier réservé à l'administrateur
-        if st.session_state.get('role') == 'admin':
-            render_financial_module(financial_metrics, period_data)
+            # Visualisations
+            figs = sector.get_visualizations(data)
+            for fig in figs:
+                st.plotly_chart(fig, use_container_width=True)
+
+            # Affichage des gains
+            st.markdown(f"## Gains financiers estimés")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Gains totaux période", f"${gains['period_gains']:,.0f}")
+            with col2:
+                st.metric("Gains journaliers moyens", f"${gains['daily_gains']:,.0f}")
+            with col3:
+                # Exemple de commission (10% des gains journaliers)
+                st.metric("Votre commission (exemple)", f"${gains['daily_gains'] * 0.1:,.0f}")
+
+            # Détail des gains
+            with st.expander("Détail des gains"):
+                for key, value in gains['breakdown'].items():
+                    st.write(f"{key}: ${value:,.2f}")
         else:
-            st.info("🔒 Le module financier détaillé est réservé à l'administrateur.")
-
-        render_footer(financial_metrics, period_data.period_name)
-
+            st.info("Veuillez charger des données via la sidebar.")
+        # --- FIN DU NOUVEAU CODE ---
     except Exception as e:
         st.error(f"Une erreur est survenue : {e}")
         st.exception(e)
@@ -137,6 +156,83 @@ def render_sidebar(data_sync):
         
         # Appeler la fonction de gestion des dates avec la clé
         handle_period_selection(period_key, default_start, default_end)
+
+                # --- NOUVEAU : Sélection du secteur et mode de données ---
+        st.markdown("---")
+        st.markdown("### 🏭 Secteur d'activité")
+        sector_options = {
+            'telecom': '📡 Télécommunications',
+            'logistics': '🚚 Logistique',
+            'retail': '🛒 Grande Distribution',
+            'education': '🎓 Éducation'
+        }
+        selected_sector_key = st.selectbox(
+            "Choisissez le secteur",
+            options=list(sector_options.keys()),
+            format_func=lambda x: sector_options[x],
+            key='sector_select'
+        )
+        if selected_sector_key != st.session_state.get('sector'):
+            st.session_state.sector = selected_sector_key
+            st.rerun()
+
+        # Choix du mode de données (simulées ou réel)
+        data_mode = st.radio("Mode de données", ["Simulées", "Réelles"], key='data_mode')
+
+        if data_mode == "Réelles":
+            source_type = st.selectbox("Type de source", ["Excel", "CSV", "API"], key='source_type')
+            if source_type == "Excel":
+                uploaded_file = st.file_uploader("Choisissez un fichier Excel", type=['xlsx', 'xls'], key='excel_file')
+                if uploaded_file:
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
+                        tmp.write(uploaded_file.getvalue())
+                        st.session_state.data_source = tmp.name
+                        st.session_state.connector_type = 'excel'
+                        st.session_state.connector_config = {}
+            elif source_type == "CSV":
+                uploaded_file = st.file_uploader("Choisissez un fichier CSV", type=['csv'], key='csv_file')
+                if uploaded_file:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp:
+                        tmp.write(uploaded_file.getvalue())
+                        st.session_state.data_source = tmp.name
+                        st.session_state.connector_type = 'csv'
+                        st.session_state.connector_config = {}
+            elif source_type == "API":
+                url = st.text_input("URL de l'API")
+                method = st.selectbox("Méthode", ["GET", "POST"])
+                if url:
+                    st.session_state.data_source = url
+                    st.session_state.connector_type = 'api'
+                    st.session_state.connector_config = {'method': method}
+        else:
+            st.info("Données simulées générées automatiquement.")
+            days_sim = st.slider("Nombre de jours de simulation", 7, 90, 30)
+            st.session_state.sim_days = days_sim
+
+        # Bouton de chargement
+        if st.button("Charger les données", type="primary"):
+            with st.spinner("Chargement en cours..."):
+                sector_name = st.session_state.sector
+                if data_mode == "Simulées":
+                    sector = SectorFactory.get_sector(sector_name)
+                    data = sector.generate_sample_data(st.session_state.get('sim_days', 30))
+                    st.session_state.data = data
+                    st.session_state.data_loaded = True
+                else:
+                    if 'data_source' not in st.session_state:
+                        st.error("Veuillez sélectionner une source de données.")
+                    else:
+                        sync = DataSynchronizer(
+                            sector_name=sector_name,
+                            connector_type=st.session_state.connector_type,
+                            connector_config=st.session_state.connector_config
+                        )
+                        data = sync.load_data(st.session_state.data_source)
+                        st.session_state.data = data
+                        st.session_state.data_loaded = True
+                st.rerun()
+        # --- FIN DU NOUVEAU CODE ---
         
         # Filtres
         render_filters()
@@ -849,7 +945,15 @@ def render_footer(financial_metrics, period_name):
         <small>Dernière mise à jour: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</small>
     </div>
     """, unsafe_allow_html=True)
-
+def render_sector_metrics(metrics, sector_name):
+    st.markdown(f" Métriques opérationnelles - {sector_name.capitalize()}")
+    cols = st.columns(len(metrics))
+    for i, (key, value) in enumerate(metrics.items()):
+        with cols[i % len(cols)]:
+            if isinstance(value, float):
+                st.metric(key.replace('_', ' ').title(), f"{value:.2f}")
+            else:
+                st.metric(key.replace('_', ' ').title(), value)
 
 if __name__ == "__main__":
     main()
