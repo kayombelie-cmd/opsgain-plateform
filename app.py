@@ -462,8 +462,8 @@ def main():
                         period_name = f"{st.session_state.start_date.strftime('%d/%m/%Y')} au {st.session_state.end_date.strftime('%d/%m/%Y')}"
                         render_footer(period_name, sector_hash)
 
-                    elif sector == 'Education':
-                        st.markdown(f"## 🚚 Tableau de bord Education ")
+                    elif sector == 'education':
+                        st.markdown(f"## 🎓 Tableau de bord Éducation ")
                         # Métriques opérationnelles en cartes
                         col1, col2, col3 = st.columns(3)
                         with col1:
@@ -582,7 +582,7 @@ def main():
                         sector_hash = generate_sector_hash(sector, st.session_state.start_date, st.session_state.end_date)
                         period_name = f"{st.session_state.start_date.strftime('%d/%m/%Y')} au {st.session_state.end_date.strftime('%d/%m/%Y')}"
                         render_footer(period_name, sector_hash)
-
+                    else:
                         # Fallback générique (ne devrait pas arriver)
                         render_sector_metrics(metrics, sector_name=sector)
                         figs = sector_obj.get_visualizations(data)
