@@ -72,7 +72,7 @@ COLORS = {
 
 # Version
 APP_VERSION = "3.0.0"
-APP_NAME = "OPSGAIN PLATEFORM/PORT INTELLIGENT"
+APP_NAME = "OPSGAIN PLATEFORM"
 APP_DESCRIPTION = "La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel"
 USE_REAL_DATA = False  # ou True si vous utilisez des données réelles
 

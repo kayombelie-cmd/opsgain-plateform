@@ -26,7 +26,7 @@ class I18n:
                 "footer": "OPSGAIN PLATFORM v3.0 - Données synchronisées"
             },
             "sidebar": {
-                "title": "OPSGAIN PLATFORM / PORT SEC INTELLIGENT",
+                "title": "OPSGAIN PLATFORM",
                 "demo_button": "🚀 Lancer la démonstration complète",
                 "period_analysis": "📅 PÉRIODE D'ANALYSE",
                 "select_period": "Sélectionner la période",
