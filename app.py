@@ -128,7 +128,56 @@ def main():
                 else:
                     st.warning("Aucune donnée chargée pour ce secteur. Veuillez charger des données via la sidebar.")
         else:
-            st.info("Veuillez charger des données via la sidebar.")
+             st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, {COLORS['primary']}15 0%, {COLORS['secondary']}15 100%);
+                border: 2px solid {COLORS['primary']}30;
+                border-radius: 24px;
+                padding: 50px 30px;
+                text-align: center;
+                margin: 30px 0;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            ">
+                <div style="font-size: 5rem; margin-bottom: 20px; line-height: 1;">📊</div>
+                <h2 style="color: {COLORS['primary']}; font-weight: 700; font-size: 2.2rem; margin-bottom: 15px;">Bienvenue sur OpsGain</h2>
+                <p style="font-size: 1.2rem; color: #4B5563; max-width: 650px; margin: 0 auto 30px auto;">
+                    Visualisez en temps réel vos indicateurs de performance et les gains financiers générés par l’optimisation de vos opérations.
+                </p>
+                <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                    <div style="
+                        background: {COLORS['primary']};
+                        color: white;
+                        padding: 14px 30px;
+                        border-radius: 60px;
+                        font-weight: 600;
+                        font-size: 1.1rem;
+                        box-shadow: 0 8px 20px {COLORS['primary']}60;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 10px;
+                    ">
+                        <span>⬅️</span> Utilisez la barre latérale
+                    </div>
+                    <div style="
+                        background: white;
+                        color: {COLORS['primary']};
+                        padding: 14px 30px;
+                        border-radius: 60px;
+                        font-weight: 600;
+                        font-size: 1.1rem;
+                        border: 2px solid {COLORS['primary']}40;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 10px;
+                    ">
+                        <span>🗂️</span> Choisissez un secteur
+                    </div>
+                </div>
+                <p style="margin-top: 40px; font-size: 0.95rem; color: #6B7280;">
+                    Données simulées disponibles immédiatement • Connectez vos sources réelles (Excel, API, CSV)
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"Une erreur est survenue : {e}")
