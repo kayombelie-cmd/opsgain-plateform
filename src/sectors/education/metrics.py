@@ -7,4 +7,5 @@ def calculate_metrics(data):
     metrics['nb_classes'] = data['classe'].nunique()
     if 'note_moyenne' in data.columns:
         metrics['note_moyenne_generale'] = data['note_moyenne'].mean()
+    metrics['nb_jours'] = data['date_cours'].dt.date.nunique()
     return metrics

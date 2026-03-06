@@ -6,4 +6,5 @@ def calculate_metrics(data):
     metrics['carburant_total'] = data['carburant_litres'].sum()
     metrics['conso_moyenne'] = data['consommation_100km'].mean()
     metrics['duree_moyenne'] = data['duree_heures'].mean()
+    metrics['nb_jours'] = data['date_depart'].dt.date.nunique()
     return metrics
