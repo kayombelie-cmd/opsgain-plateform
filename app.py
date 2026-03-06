@@ -2,7 +2,7 @@
 Point d'entrée principal de l'application OpsGain Platform.
 """
 import streamlit as st
-
+import hashlib
 # ⚠️ set_page_config en PREMIER
 st.set_page_config(
     page_title="OpsGain Platform",
@@ -93,7 +93,7 @@ def main():
                     else:
                         st.info("🔒 Le module financier détaillé est réservé à l'administrateur.")
 
-                    render_footer(financial_metrics, period_data.period_name)
+                    render_footer(period_data.period_name, financial_metrics.transaction_hash)
                 else:
                     st.warning("Les données du port ne sont pas disponibles. Veuillez charger des données via la sidebar.")
             else:
@@ -221,7 +221,10 @@ def main():
                             - **Gain revenu** : temps d'indisponibilité évité × manque à gagner horaire.
                             - **Gain déplacement** : augmentation des résolutions à distance × coût moyen d'un déplacement.
                             """)
-
+                          # --- AJOUT DU FOOTER AVEC HASH SPÉCIFIQUE ---
+                        sector_hash = generate_sector_hash(sector, st.session_state.start_date, st.session_state.end_date)
+                        period_name = f"{st.session_state.start_date.strftime('%d/%m/%Y')} au {st.session_state.end_date.strftime('%d/%m/%Y')}"
+                        render_footer(period_name, sector_hash)
                     elif sector == 'logistics':
                         st.markdown(f"## 🚚 Tableau de bord Logistique")
 
@@ -339,7 +342,10 @@ def main():
                             - **Gain retard** : réduction du taux de retard × coût unitaire d'un retard (pénalités, perte de confiance).
                             - **Gain carburant** : diminution de la consommation moyenne × distance totale × prix du carburant.
                             """)
-
+                          # --- AJOUT DU FOOTER AVEC HASH SPÉCIFIQUE ---
+                        sector_hash = generate_sector_hash(sector, st.session_state.start_date, st.session_state.end_date)
+                        period_name = f"{st.session_state.start_date.strftime('%d/%m/%Y')} au {st.session_state.end_date.strftime('%d/%m/%Y')}"
+                        render_footer(period_name, sector_hash)
                     elif sector == 'retail':
                         st.markdown(f"## 🛒 Tableau de bord Grande Distribution")
 
@@ -450,10 +456,13 @@ def main():
                             - **Gain rupture** : réduction du nombre de ruptures × coût unitaire d'une rupture (ventes perdues).
                             - **Gain employé** : optimisation de la productivité (augmentation du CA par employé).
                             """)
+                          # --- AJOUT DU FOOTER AVEC HASH SPÉCIFIQUE ---
+                        sector_hash = generate_sector_hash(sector, st.session_state.start_date, st.session_state.end_date)
+                        period_name = f"{st.session_state.start_date.strftime('%d/%m/%Y')} au {st.session_state.end_date.strftime('%d/%m/%Y')}"
+                        render_footer(period_name, sector_hash)
 
-                    elif sector == 'education':
-                        st.markdown(f"## 🎓 Tableau de bord Éducation")
-
+                    elif sector == 'Education':
+                        st.markdown(f"## 🚚 Tableau de bord Education ")
                         # Métriques opérationnelles en cartes
                         col1, col2, col3 = st.columns(3)
                         with col1:
@@ -568,6 +577,10 @@ def main():
                             - **Gain présence** : augmentation du taux de présence × subvention par élève × nombre d'élèves.
                             - **Gain optimisation** : optimisation des heures de cours (ratio élèves/enseignant) × coût horaire enseignant.
                             """)
+                          # --- AJOUT DU FOOTER AVEC HASH SPÉCIFIQUE ---
+                        sector_hash = generate_sector_hash(sector, st.session_state.start_date, st.session_state.end_date)
+                        period_name = f"{st.session_state.start_date.strftime('%d/%m/%Y')} au {st.session_state.end_date.strftime('%d/%m/%Y')}"
+                        render_footer(period_name, sector_hash)
 
                     else:
                         # Fallback générique (ne devrait pas arriver)
@@ -1557,16 +1570,26 @@ def render_financial_module(financial_metrics, period_data):
         st.markdown(f"- {i18n.get('financial.fixed_monthly', 'Fixe mensuel')}: ${st.session_state.monthly_fixed:,.2f}")
         st.markdown(f"- {i18n.get('financial.variable', rate=st.session_state.commission_rate*100)}: ${financial_metrics.monthly_projection * st.session_state.commission_rate:,.2f}")
         st.markdown(f"- {i18n.get('financial.total_commission', 'Commission totale')}: ${financial_metrics.your_commission_monthly:,.2f}")
+def generate_sector_hash(sector_name, start_date, end_date):
+    """
+    Génère un hash unique pour un secteur et une période donnée.
+    """
+    # Concaténer les informations
+    input_str = f"{sector_name}_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}"
+    # Calculer le hash SHA-256 et prendre les 16 premiers caractères (comme votre exemple)
+    hash_obj = hashlib.sha256(input_str.encode())
+    return "0x" + hash_obj.hexdigest()[:8]  # Format 0x + 16 hex
 
-
-def render_footer(financial_metrics, period_name):
+def render_footer(period_name, transaction_hash=None):
+    if transaction_hash is None:
+        transaction_hash = "0x0000000000000000"  # valeur par défaut si non fournie
     st.markdown("---")
     st.markdown(f"""
     <div style="text-align: center; color: #6B7280; padding: 20px; font-size: 0.9rem;">
         <strong>OPSGAIN PLATFORM {APP_VERSION}</strong> - Données synchronisées pour tous les utilisateurs<br>
         <strong>La plateforme qui transforme vos données opérationnelles en gains financiers vérifiables en temps réel</strong><br>
         <strong>Période analysée</strong> : {period_name} 
-        <strong>Hash des données</strong> : {PUBLIC_DATA_HASH} | Hash de vérification: {financial_metrics.transaction_hash}<br>
+        <strong>Hash des données</strong> : {PUBLIC_DATA_HASH} | Hash de vérification: {transaction_hash}<br>
         <small>Dernière mise à jour: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</small>
     </div>
     """, unsafe_allow_html=True)
