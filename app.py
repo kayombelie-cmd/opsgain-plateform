@@ -128,7 +128,17 @@ def main():
                 else:
                     st.warning("Aucune donnée chargée pour ce secteur. Veuillez charger des données via la sidebar.")
         else:
-             st.markdown(f"""
+            # Charger le logo en base64 pour l'afficher dans le HTML
+            import base64
+            from pathlib import Path
+
+            logo_path = Path("assets/opsgain_logo.jpg")
+            logo_base64 = None
+            if logo_path.exists():
+                with open(logo_path, "rb") as f:
+                    logo_base64 = base64.b64encode(f.read()).decode()
+
+            st.markdown(f"""
             <div style="
                 background: linear-gradient(135deg, {COLORS['primary']}15 0%, {COLORS['secondary']}15 100%);
                 border: 2px solid {COLORS['primary']}30;
@@ -138,7 +148,9 @@ def main():
                 margin: 30px 0;
                 box-shadow: 0 20px 40px rgba(0,0,0,0.08);
             ">
-                <div style="font-size: 5rem; margin-bottom: 20px; line-height: 1;">📊</div>
+                <div style="margin-bottom: 20px;">
+                    {f'<img src="data:image/jpeg;base64,{logo_base64}" style="width: 120px;">' if logo_base64 else '<div style="font-size: 5rem; line-height: 1;">📊</div>'}
+                </div>
                 <h2 style="color: {COLORS['primary']}; font-weight: 700; font-size: 2.2rem; margin-bottom: 15px;">Bienvenue sur OpsGain</h2>
                 <p style="font-size: 1.2rem; color: #4B5563; max-width: 650px; margin: 0 auto 30px auto;">
                     Visualisez en temps réel vos indicateurs de performance et les gains financiers générés par l’optimisation de vos opérations.
