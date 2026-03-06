@@ -5,7 +5,7 @@ import streamlit as st
 
 # ⚠️ set_page_config en PREMIER
 st.set_page_config(
-    page_title="OpsGain Platform / Port Intelligent",
+    page_title="OpsGain Platform",
     page_icon="assets/opsgain_logo.jpg",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -107,24 +107,486 @@ def main():
                     }
                     gains = sector_obj.calculate_gains(data, gain_params)
 
-                    render_sector_metrics(metrics, sector_name=sector)
+                    # --- Affichage personnalisé par secteur ---
+                    if sector == 'telecom':
+                        st.markdown(f"## 📡 Tableau de bord Télécommunications")
 
-                    figs = sector_obj.get_visualizations(data)
-                    for fig in figs:
-                        st.plotly_chart(fig, use_container_width=True)
+                        # ----- Métriques opérationnelles en cartes -----
+                        col1, col2, col3, col4 = st.columns(4)
+                        with col1:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">📦 Total tickets</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['total_tickets']}</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col2:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #065F46 0%, #059669 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">⏱️ MTTR moyen</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['mttr_moyen']:.1f} min</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col3:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #92400E 0%, #D97706 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">📡 Résolution à distance</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['taux_resolution_distance']:.1f}%</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col4:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #B45309 0%, #F59E0B 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">✅ Respect SLA</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['taux_respect_sla']:.1f}%</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
 
-                    st.markdown("## Gains financiers estimés")
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("Gains totaux période", f"${gains['period_gains']:,.0f}")
-                    with col2:
-                        st.metric("Gains journaliers moyens", f"${gains['daily_gains']:,.0f}")
-                    with col3:
-                        st.metric("Votre commission (exemple)", f"${gains['daily_gains'] * 0.1:,.0f}")
+                        # ----- Graphiques -----
+                        st.markdown("---")
+                        st.markdown("### 📈 Analyse des performances")
+                        figs = sector_obj.get_visualizations(data)
+                        # Afficher les graphiques sur plusieurs colonnes
+                        cols_figs = st.columns(len(figs))
+                        for i, fig in enumerate(figs):
+                            with cols_figs[i]:
+                                st.plotly_chart(fig, use_container_width=True)
 
-                    with st.expander("Détail des gains"):
-                        for key, value in gains['breakdown'].items():
-                            st.write(f"{key}: ${value:,.2f}")
+                        # ----- Gains financiers -----
+                        st.markdown("---")
+                        st.markdown("### 💰 Gains financiers estimés")
+
+                        col_g1, col_g2, col_g3 = st.columns(3)
+                        with col_g1:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid {COLORS['primary']}40; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">💰 Gains totaux période</p>
+                                <h2 style="color: {COLORS['primary']}; margin: 5px 0; font-size: 2.5rem;">${gains['period_gains']:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">sur {metrics['nb_jours']} jours</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col_g2:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid #10B98140; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">📆 Gains journaliers moyens</p>
+                                <h2 style="color: #10B981; margin: 5px 0; font-size: 2.5rem;">${gains['daily_gains']:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">par jour</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col_g3:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid #8B5CF640; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">💼 Commission estimée</p>
+                                <h2 style="color: #8B5CF6; margin: 5px 0; font-size: 2.5rem;">${gains['daily_gains'] * 0.12:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">12% des gains journaliers</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # ----- Détail des gains avec graphique circulaire -----
+                        st.markdown("---")
+                        st.markdown("### 🔍 Détail des gains")
+
+                        col_detail1, col_detail2 = st.columns([3, 2])
+
+                        with col_detail1:
+                            import plotly.graph_objects as go
+                            labels = list(gains['breakdown'].keys())
+                            values = list(gains['breakdown'].values())
+                            # Nettoyer les labels pour l'affichage
+                            labels_clean = [lab.replace('_', ' ').title() for lab in labels]
+                            fig_pie = go.Figure(data=[go.Pie(labels=labels_clean, values=values, hole=0.4)])
+                            fig_pie.update_layout(
+                                title="Répartition des gains",
+                                showlegend=True,
+                                height=350,
+                                margin=dict(l=20, r=20, t=40, b=20)
+                            )
+                            st.plotly_chart(fig_pie, use_container_width=True)
+
+                        with col_detail2:
+                            st.markdown("#### 📊 Composition")
+                            for key, value in gains['breakdown'].items():
+                                label = key.replace('_', ' ').title()
+                                st.markdown(f"""
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-weight: 500;">{label}</span>
+                                    <span style="font-weight: 700; color: {COLORS['primary']};">${value:,.0f}</span>
+                                </div>
+                                """, unsafe_allow_html=True)
+
+                        # ----- Explication des calculs -----
+                        with st.expander("Comment ces gains sont-ils calculés ?"):
+                            st.markdown("""
+                            - **Gain main d'œuvre** : réduction du temps d'intervention (MTTR) × coût horaire technicien.
+                            - **Gain revenu** : temps d'indisponibilité évité × manque à gagner horaire.
+                            - **Gain déplacement** : augmentation des résolutions à distance × coût moyen d'un déplacement.
+                            """)
+
+                    elif sector == 'logistics':
+                        st.markdown(f"## 🚚 Tableau de bord Logistique")
+
+                        # Métriques opérationnelles en cartes
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">📦 Total livraisons</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['total_livraisons']}</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col2:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #065F46 0%, #059669 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">⏱️ Taux de retard</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['taux_retard']:.1f}%</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col3:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #92400E 0%, #D97706 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">⛽ Consommation moyenne</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['conso_moyenne']:.1f} L/100km</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        col4, col5, col6 = st.columns(3)
+                        with col4:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #B45309 0%, #F59E0B 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">📏 Distance totale</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['distance_totale']:.0f} km</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col5:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">⛽ Carburant total</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['carburant_total']:.0f} L</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col6:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #065F46 0%, #10B981 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">⏱️ Durée moyenne</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['duree_moyenne']:.1f} h</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # Graphiques
+                        st.markdown("---")
+                        st.markdown("### 📈 Analyse des performances")
+                        figs = sector_obj.get_visualizations(data)
+                        cols_figs = st.columns(len(figs))
+                        for i, fig in enumerate(figs):
+                            with cols_figs[i]:
+                                st.plotly_chart(fig, use_container_width=True)
+
+                        # Gains financiers
+                        st.markdown("---")
+                        st.markdown("### 💰 Gains financiers estimés")
+
+                        col_g1, col_g2, col_g3 = st.columns(3)
+                        with col_g1:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid {COLORS['primary']}40; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">💰 Gains totaux période</p>
+                                <h2 style="color: {COLORS['primary']}; margin: 5px 0; font-size: 2.5rem;">${gains['period_gains']:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">sur {metrics['nb_jours']} jours</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col_g2:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid #10B98140; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">📆 Gains journaliers moyens</p>
+                                <h2 style="color: #10B981; margin: 5px 0; font-size: 2.5rem;">${gains['daily_gains']:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">par jour</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col_g3:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid #8B5CF640; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">💼 Commission estimée</p>
+                                <h2 style="color: #8B5CF6; margin: 5px 0; font-size: 2.5rem;">${gains['daily_gains'] * 0.12:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">12% des gains journaliers</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # Détail des gains
+                        st.markdown("---")
+                        st.markdown("### 🔍 Détail des gains")
+                        col_detail1, col_detail2 = st.columns([3, 2])
+                        with col_detail1:
+                            import plotly.graph_objects as go
+                            labels = list(gains['breakdown'].keys())
+                            values = list(gains['breakdown'].values())
+                            labels_clean = [lab.replace('_', ' ').title() for lab in labels]
+                            fig_pie = go.Figure(data=[go.Pie(labels=labels_clean, values=values, hole=0.4)])
+                            fig_pie.update_layout(title="Répartition des gains", height=350, margin=dict(l=20, r=20, t=40, b=20))
+                            st.plotly_chart(fig_pie, use_container_width=True)
+                        with col_detail2:
+                            st.markdown("#### 📊 Composition")
+                            for key, value in gains['breakdown'].items():
+                                label = key.replace('_', ' ').title()
+                                st.markdown(f"""
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-weight: 500;">{label}</span>
+                                    <span style="font-weight: 700; color: {COLORS['primary']};">${value:,.0f}</span>
+                                </div>
+                                """, unsafe_allow_html=True)
+
+                        with st.expander("Comment ces gains sont-ils calculés ?"):
+                            st.markdown("""
+                            - **Gain retard** : réduction du taux de retard × coût unitaire d'un retard (pénalités, perte de confiance).
+                            - **Gain carburant** : diminution de la consommation moyenne × distance totale × prix du carburant.
+                            """)
+
+                    elif sector == 'retail':
+                        st.markdown(f"## 🛒 Tableau de bord Grande Distribution")
+
+                        # Métriques opérationnelles en cartes
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">📦 Transactions totales</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['total_transactions']}</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col2:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #065F46 0%, #059669 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">💰 CA total</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">${metrics['ca_total']:,.0f}</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col3:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #92400E 0%, #D97706 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">📊 Taux de rupture</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['taux_rupture']:.1f}%</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        col4, col5 = st.columns(2)
+                        with col4:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #B45309 0%, #F59E0B 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">📈 CA moyen / transaction</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">${metrics['ca_moyen_par_transaction']:.0f}</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col5:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">👥 Productivité employé</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">${metrics['productivite_employe']:,.0f}</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # Graphiques
+                        st.markdown("---")
+                        st.markdown("### 📈 Analyse des performances")
+                        figs = sector_obj.get_visualizations(data)
+                        cols_figs = st.columns(len(figs))
+                        for i, fig in enumerate(figs):
+                            with cols_figs[i]:
+                                st.plotly_chart(fig, use_container_width=True)
+
+                        # Gains financiers
+                        st.markdown("---")
+                        st.markdown("### 💰 Gains financiers estimés")
+
+                        col_g1, col_g2, col_g3 = st.columns(3)
+                        with col_g1:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid {COLORS['primary']}40; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">💰 Gains totaux période</p>
+                                <h2 style="color: {COLORS['primary']}; margin: 5px 0; font-size: 2.5rem;">${gains['period_gains']:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">sur {metrics['nb_jours']} jours</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col_g2:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid #10B98140; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">📆 Gains journaliers moyens</p>
+                                <h2 style="color: #10B981; margin: 5px 0; font-size: 2.5rem;">${gains['daily_gains']:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">par jour</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col_g3:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid #8B5CF640; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">💼 Commission estimée</p>
+                                <h2 style="color: #8B5CF6; margin: 5px 0; font-size: 2.5rem;">${gains['daily_gains'] * 0.12:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">12% des gains journaliers</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # Détail des gains
+                        st.markdown("---")
+                        st.markdown("### 🔍 Détail des gains")
+                        col_detail1, col_detail2 = st.columns([3, 2])
+                        with col_detail1:
+                            import plotly.graph_objects as go
+                            labels = list(gains['breakdown'].keys())
+                            values = list(gains['breakdown'].values())
+                            labels_clean = [lab.replace('_', ' ').title() for lab in labels]
+                            fig_pie = go.Figure(data=[go.Pie(labels=labels_clean, values=values, hole=0.4)])
+                            fig_pie.update_layout(title="Répartition des gains", height=350, margin=dict(l=20, r=20, t=40, b=20))
+                            st.plotly_chart(fig_pie, use_container_width=True)
+                        with col_detail2:
+                            st.markdown("#### 📊 Composition")
+                            for key, value in gains['breakdown'].items():
+                                label = key.replace('_', ' ').title()
+                                st.markdown(f"""
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-weight: 500;">{label}</span>
+                                    <span style="font-weight: 700; color: {COLORS['primary']};">${value:,.0f}</span>
+                                </div>
+                                """, unsafe_allow_html=True)
+
+                        with st.expander("Comment ces gains sont-ils calculés ?"):
+                            st.markdown("""
+                            - **Gain rupture** : réduction du nombre de ruptures × coût unitaire d'une rupture (ventes perdues).
+                            - **Gain employé** : optimisation de la productivité (augmentation du CA par employé).
+                            """)
+
+                    elif sector == 'education':
+                        st.markdown(f"## 🎓 Tableau de bord Éducation")
+
+                        # Métriques opérationnelles en cartes
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">📚 Cours total</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['total_cours']}</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col2:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #065F46 0%, #059669 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">⏱️ Heures totales</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['heures_totales']:.1f} h</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col3:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #92400E 0%, #D97706 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">📊 Taux présence</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['taux_presence_moyen']:.1f}%</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        col4, col5, col6 = st.columns(3)
+                        with col4:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #B45309 0%, #F59E0B 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">👥 Enseignants</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['nb_enseignants']}</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col5:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">🏫 Classes</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics['nb_classes']}</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col6:
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #065F46 0%, #10B981 100%); padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.9rem;">📝 Note moyenne</p>
+                                <h3 style="color: white; margin: 5px 0 0; font-size: 2.2rem;">{metrics.get('note_moyenne_generale', 0):.1f}</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # Graphiques
+                        st.markdown("---")
+                        st.markdown("### 📈 Analyse des performances")
+                        figs = sector_obj.get_visualizations(data)
+                        cols_figs = st.columns(len(figs))
+                        for i, fig in enumerate(figs):
+                            with cols_figs[i]:
+                                st.plotly_chart(fig, use_container_width=True)
+
+                        # Gains financiers
+                        st.markdown("---")
+                        st.markdown("### 💰 Gains financiers estimés")
+
+                        col_g1, col_g2, col_g3 = st.columns(3)
+                        with col_g1:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid {COLORS['primary']}40; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">💰 Gains totaux période</p>
+                                <h2 style="color: {COLORS['primary']}; margin: 5px 0; font-size: 2.5rem;">${gains['period_gains']:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">sur {metrics['nb_jours']} jours</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col_g2:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid #10B98140; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">📆 Gains journaliers moyens</p>
+                                <h2 style="color: #10B981; margin: 5px 0; font-size: 2.5rem;">${gains['daily_gains']:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">par jour</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col_g3:
+                            st.markdown(f"""
+                            <div style="background: white; border: 2px solid #8B5CF640; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                                <p style="color: #4B5563; margin: 0; font-size: 0.95rem;">💼 Commission estimée</p>
+                                <h2 style="color: #8B5CF6; margin: 5px 0; font-size: 2.5rem;">${gains['daily_gains'] * 0.12:,.0f}</h2>
+                                <p style="color: #6B7280; font-size: 0.85rem;">12% des gains journaliers</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # Détail des gains
+                        st.markdown("---")
+                        st.markdown("### 🔍 Détail des gains")
+                        col_detail1, col_detail2 = st.columns([3, 2])
+                        with col_detail1:
+                            import plotly.graph_objects as go
+                            labels = list(gains['breakdown'].keys())
+                            values = list(gains['breakdown'].values())
+                            labels_clean = [lab.replace('_', ' ').title() for lab in labels]
+                            fig_pie = go.Figure(data=[go.Pie(labels=labels_clean, values=values, hole=0.4)])
+                            fig_pie.update_layout(title="Répartition des gains", height=350, margin=dict(l=20, r=20, t=40, b=20))
+                            st.plotly_chart(fig_pie, use_container_width=True)
+                        with col_detail2:
+                            st.markdown("#### 📊 Composition")
+                            for key, value in gains['breakdown'].items():
+                                label = key.replace('_', ' ').title()
+                                st.markdown(f"""
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-weight: 500;">{label}</span>
+                                    <span style="font-weight: 700; color: {COLORS['primary']};">${value:,.0f}</span>
+                                </div>
+                                """, unsafe_allow_html=True)
+
+                        with st.expander("Comment ces gains sont-ils calculés ?"):
+                            st.markdown("""
+                            - **Gain présence** : augmentation du taux de présence × subvention par élève × nombre d'élèves.
+                            - **Gain optimisation** : optimisation des heures de cours (ratio élèves/enseignant) × coût horaire enseignant.
+                            """)
+
+                    else:
+                        # Fallback générique (ne devrait pas arriver)
+                        render_sector_metrics(metrics, sector_name=sector)
+                        figs = sector_obj.get_visualizations(data)
+                        for fig in figs:
+                            st.plotly_chart(fig, use_container_width=True)
+                        st.markdown("## Gains financiers estimés")
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Gains totaux période", f"${gains['period_gains']:,.0f}")
+                        with col2:
+                            st.metric("Gains journaliers moyens", f"${gains['daily_gains']:,.0f}")
+                        with col3:
+                            st.metric("Votre commission (exemple)", f"${gains['daily_gains'] * 0.12:,.0f}")
+                        with st.expander("Détail des gains"):
+                            for key, value in gains['breakdown'].items():
+                                st.write(f"{key}: ${value:,.2f}")
+
                 else:
                     st.warning("Aucune donnée chargée pour ce secteur. Veuillez charger des données via la sidebar.")
         else:
@@ -197,7 +659,7 @@ def main():
 
 
 # ------------------------------------------------------------------------------
-# Fonctions de rendu
+# Fonctions de rendu (sidebar, etc.) – inchangées, mais incluses pour complétude
 # ------------------------------------------------------------------------------
 
 def render_sidebar(data_sync):
