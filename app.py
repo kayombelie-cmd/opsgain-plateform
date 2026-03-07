@@ -869,12 +869,14 @@ def render_sidebar(data_sync):
             i18n.set_language(language)
             st.rerun()
 
-        # Paramètres financiers – réservés aux admins
-        if st.session_state.get('role') == 'admin':
+            # Paramètres financiers – réservés aux admins et au secteur port uniquement
+        if st.session_state.get('role') == 'admin' and st.session_state.get('sector') == 'port':
             render_financial_params()
-        else:
+        elif st.session_state.get('sector') == 'port':
+            # Si l'utilisateur n'est pas admin mais que le secteur est port, on affiche un message
             st.markdown("---")
             st.info("Les paramètres financiers sont réservés à l'administrateur.")
+        # Pour les autres secteurs, on n'affiche rien du tout
 
         render_sync_section(data_sync)
         render_info_section()
