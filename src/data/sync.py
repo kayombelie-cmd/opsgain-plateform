@@ -197,6 +197,25 @@ class DataSynchronizer:
         # Conversion en objet PeriodData
         return self._df_to_period_data(normalized_data, start_date, end_date)
 
+    def load_data(self, source: str):
+        """
+        Charge les données brutes depuis une source (fichier, URL) via le connecteur,
+        puis les transforme selon le secteur.
+
+        Args:
+            source: Chemin du fichier ou URL.
+
+        Returns:
+            DataFrame transformé, prêt à être utilisé par le secteur.
+        """
+        if self.data_mode != "sector":
+            raise ValueError("load_data ne peut être appelé qu'en mode 'sector'")
+        
+        # Lecture via le connecteur
+        raw_data = self.connector.read(source, **self.connector_config)
+        # Transformation sectorielle
+        return self.sector.transform(raw_data)
+
     def _df_to_period_data(self, df: pd.DataFrame, start_date: datetime, end_date: datetime) -> PeriodData:
         """
         Convertit un DataFrame (sortie du secteur) en objet PeriodData.
