@@ -15,5 +15,11 @@ def transform(raw_df):
     """
     df = raw_df.copy()
     df['date_transaction'] = pd.to_datetime(df['date_transaction'], dayfirst=True)
+    
+    # Renommer la colonne de montant total
+    if 'montant_total' in df.columns:
+        df = df.rename(columns={'montant_total': 'chiffre_affaires'})
+
+    # ... reste du code ...
     df['chiffre_affaires'] = df['quantite'] * df['prix_unitaire']
     return df

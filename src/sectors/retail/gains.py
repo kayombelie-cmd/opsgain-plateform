@@ -1,32 +1,55 @@
 def calculate_gains(data, params):
-    # params: marge_moyenne, cout_employe_horaire, penalite_rupture
-    marge = params.get('marge_moyenne', 0.3)
-    cout_employe = params.get('cout_employe_horaire', 15)
-    penalite_rupture = params.get('penalite_rupture', 100)
-
-    # Gain par augmentation du CA (via optimisation des horaires ou réduction des ruptures)
-    # On simplifie : gain lié à la réduction des ruptures de stock
-    nb_ruptures = data['rupture_stock'].sum()
-    gain_rupture = nb_ruptures * penalite_rupture
-
-    # Gain lié à l'optimisation des effectifs (on pourrait comparer au ratio CA/employé)
-    # Ici on utilise un ratio cible
-    ratio_cible = params.get('ratio_ca_employe_cible', 500)
-    current_ratio = data['chiffre_affaires'].sum() / data['nb_employes_presents'].sum()
-    if current_ratio < ratio_cible:
-        # Perte potentielle
-        perte = (ratio_cible - current_ratio) * data['nb_employes_presents'].sum()
-        gain_employe = perte * 0.5  # on récupère 50% du gap
+    """
+    Calcule les gains financiers pour le secteur Retail.
+    
+    Args:
+        data: DataFrame des transactions.
+        params: Dictionnaire de paramètres (cout_rupture, productivite_ref, etc.)
+    
+    Returns:
+        dict: Gains calculés (period_gains, daily_gains, breakdown)
+    """
+    gains = {}
+    
+    # 1. Gain lié aux ruptures de stock
+    if 'rupture_stock' in data.columns:
+        nb_ruptures = data['rupture_stock'].sum()
+        cout_rupture = params.get('cout_rupture', 100)  # coût moyen d'une rupture
+        gains['rupture_gain'] = nb_ruptures * cout_rupture
     else:
-        gain_employe = 0
-
-    total_gain = gain_rupture + gain_employe
-    daily_gain = total_gain / data['date_transaction'].dt.date.nunique()
-    return {
-        'period_gains': total_gain,
-        'daily_gains': daily_gain,
-        'breakdown': {
-            'gain_rupture': gain_rupture,
-            'gain_employe': gain_employe
-        }
+        gains['rupture_gain'] = 0.0
+    
+    # 2. Gain lié à la productivité des employés
+    if ('chiffre_affaires' in data.columns and 'nb_employes_presents' in data.columns 
+            and data['nb_employes_presents'].sum() > 0):
+        ca_total = data['chiffre_affaires'].sum()
+        nb_employes = data['nb_employes_presents'].sum()
+        productivite_actuelle = ca_total / nb_employes
+        
+        productivite_ref = params.get('productivite_ref', 800)  # CA/employé de référence
+        gain_productivite = (productivite_actuelle - productivite_ref) * nb_employes
+        gains['productivite_gain'] = max(0, gain_productivite)  # seulement si positif
+    else:
+        gains['productivite_gain'] = 0.0
+    
+    # Gains totaux sur la période
+    gains['period_gains'] = gains['rupture_gain'] + gains['productivite_gain']
+    
+    # Calcul du nombre de jours (basé sur les dates)
+    date_col = next((col for col in ['date_transaction', 'date'] if col in data.columns), None)
+    if date_col:
+        start = data[date_col].min()
+        end = data[date_col].max()
+        nb_jours = (end - start).days + 1
+    else:
+        nb_jours = 1
+    
+    gains['daily_gains'] = gains['period_gains'] / nb_jours if nb_jours > 0 else 0
+    
+    # Détail pour le graphique
+    gains['breakdown'] = {
+        'réduction_ruptures': gains['rupture_gain'],
+        'productivité_employés': gains['productivite_gain']
     }
+    
+    return gains
