@@ -838,6 +838,7 @@ def render_sidebar(data_sync):
                                 st.error("Impossible de charger les données réelles pour le port.")
                         else:
                             sync = DataSynchronizer(
+                                use_real_data=True,
                                 sector_name=sector_name,
                                 connector_type=st.session_state.connector_type,
                                 connector_config=st.session_state.connector_config
