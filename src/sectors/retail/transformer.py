@@ -14,6 +14,6 @@ def transform(raw_df):
     - rupture_stock (bool)
     """
     df = raw_df.copy()
-    df['date_transaction'] = pd.to_datetime(df['date_transaction'])
+    df['date_transaction'] = pd.to_datetime(df['date_transaction'], dayfirst=True)
     df['chiffre_affaires'] = df['quantite'] * df['prix_unitaire']
     return df
